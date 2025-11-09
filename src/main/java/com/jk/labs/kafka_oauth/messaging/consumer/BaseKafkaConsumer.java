@@ -1,5 +1,6 @@
 package com.jk.labs.kafka_oauth.messaging.consumer;
 
+import com.jk.labs.kafka_oauth.dto.TradeEventMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
@@ -20,12 +21,12 @@ public abstract class BaseKafkaConsumer {
             groupId = "forex-group",
             containerFactory = "#{__listener.getListenerFactoryName()}"
     )
-    public void listen(@Payload String message, Acknowledgment ack) {
-        processMessage(message);
+    public void listen(@Payload TradeEventMessage tradeEventMessage, Acknowledgment ack) {
+        processMessage(tradeEventMessage);
         ack.acknowledge();
     }
 
-    protected abstract void processMessage(String message);
+    protected abstract void processMessage(TradeEventMessage message);
 
     // Each subclass will tell which listener container factory it needs
     public String getListenerFactoryName() {

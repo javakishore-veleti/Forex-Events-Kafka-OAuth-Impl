@@ -24,6 +24,7 @@ spring:
         minimum-idle: 1
 
   kafka:
+    bootstrap-servers: dummy:0
     # Common Kafka defaults (these are shared across all providers)
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
@@ -47,7 +48,7 @@ otel:
 
 forex:
   kafka:
-    # 👇 Provider-specific Kafka brokers (each points to a different cluster)
+    # Provider-specific Kafka brokers (each points to a different cluster)
     brokers:
       keycloak: ${KAFKA_KEYCLOAK_BOOTSTRAP:localhost:9093}
       google: ${KAFKA_GOOGLE_BOOTSTRAP:localhost:9094}

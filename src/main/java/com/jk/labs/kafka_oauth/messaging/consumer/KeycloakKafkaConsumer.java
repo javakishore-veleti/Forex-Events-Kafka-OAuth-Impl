@@ -1,5 +1,6 @@
 package com.jk.labs.kafka_oauth.messaging.consumer;
 
+import com.jk.labs.kafka_oauth.dto.TradeEventMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.stereotype.Component;
@@ -15,7 +16,7 @@ public class KeycloakKafkaConsumer extends BaseKafkaConsumer {
     }
 
     @Override
-    protected void processMessage(String message) {
+    protected void processMessage(TradeEventMessage message) {
         log.info("Keycloak Consumer received: " + message);
     }
 }

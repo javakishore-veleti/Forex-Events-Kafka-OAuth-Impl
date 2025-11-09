@@ -1,5 +1,6 @@
 package com.jk.labs.kafka_oauth.messaging.producer;
 
+import com.jk.labs.kafka_oauth.dto.TradeEventMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
@@ -12,11 +13,11 @@ import org.springframework.stereotype.Component;
 @Component
 public class GithubEventPublisher extends BaseKafkaProducer {
 
-    public GithubEventPublisher(@Qualifier("githubKafkaTemplate") KafkaTemplate<String, String> kafkaTemplate) {
+    public GithubEventPublisher(@Qualifier("githubKafkaTemplate") KafkaTemplate<String, TradeEventMessage> kafkaTemplate) {
         super(kafkaTemplate);
     }
 
-    public void publish(String topic, String message) {
+    public void publish(String topic, TradeEventMessage message) {
         send(topic, message);
     }
 }

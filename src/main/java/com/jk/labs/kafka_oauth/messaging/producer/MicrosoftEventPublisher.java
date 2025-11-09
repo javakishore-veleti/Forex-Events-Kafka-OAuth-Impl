@@ -1,5 +1,6 @@
 package com.jk.labs.kafka_oauth.messaging.producer;
 
+import com.jk.labs.kafka_oauth.dto.TradeEventMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
@@ -11,11 +12,12 @@ import org.springframework.stereotype.Component;
 @Component
 public class MicrosoftEventPublisher extends BaseKafkaProducer {
 
-    public MicrosoftEventPublisher(@Qualifier("microsoftKafkaTemplate") KafkaTemplate<String, String> kafkaTemplate) {
+    public MicrosoftEventPublisher(@Qualifier("microsoftKafkaTemplate") KafkaTemplate<String, TradeEventMessage> kafkaTemplate) {
         super(kafkaTemplate);
     }
 
-    public void publish(String topic, String message) {
+    @SuppressWarnings("unused")
+    public void publish(String topic, TradeEventMessage message) {
         send(topic, message);
     }
 }
