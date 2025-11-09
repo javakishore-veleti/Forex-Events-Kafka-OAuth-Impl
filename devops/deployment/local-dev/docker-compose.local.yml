@@ -2,7 +2,7 @@ version: "3.9"
 
 services:
   # ======================================================
-  # 🦓 ZooKeeper
+  # ZooKeeper
   # ======================================================
   zookeeper:
     image: confluentinc/cp-zookeeper:7.6.0
@@ -23,7 +23,7 @@ services:
       retries: 10
 
   # ======================================================
-  # ☕ Kafka Brokers (one per OAuth provider)
+  # Kafka Brokers (one per OAuth provider)
   # ======================================================
 
   kafka-keycloak:
@@ -131,7 +131,7 @@ services:
       - forex-net
 
   # ======================================================
-  # 📊 Kafka UI (single pane for all clusters)
+  # Kafka UI (single pane for all clusters)
   # ======================================================
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
@@ -156,7 +156,7 @@ services:
       - forex-net
 
   # ======================================================
-  # 🪄 Kafka Setup — Creates Provider Topics Automatically
+  # Kafka Setup — Creates Provider Topics Automatically
   # ======================================================
   kafka-setup:
     image: confluentinc/cp-kafka:7.6.0
@@ -177,7 +177,7 @@ services:
       - forex-net
 
   # ======================================================
-  # 🔑 Keycloak
+  # Keycloak
   # ======================================================
   keycloak:
     image: quay.io/keycloak/keycloak:25.0.2
@@ -194,7 +194,7 @@ services:
       - forex-net
 
   # ======================================================
-  # 📈 Prometheus
+  # Prometheus
   # ======================================================
   prometheus:
     image: prom/prometheus:v2.53.0
@@ -211,7 +211,7 @@ services:
       - --web.enable-lifecycle
 
   # ======================================================
-  # 📊 Grafana
+  # Grafana
   # ======================================================
   grafana:
     image: grafana/grafana:11.1.0
@@ -229,7 +229,7 @@ services:
       - forex-net
 
   # ======================================================
-  # 🧭 Jaeger
+  # Jaeger
   # ======================================================
   jaeger:
     image: jaegertracing/all-in-one:1.57
@@ -243,8 +243,28 @@ services:
     networks:
       - forex-net
 
+  # ======================================================
+  # PostgreSQL (for Spring Boot)
+  # ======================================================
+  postgres:
+    image: postgres:16
+    container_name: forex-postgres
+    environment:
+      POSTGRES_USER: forex_user
+      POSTGRES_PASSWORD: forex_pass
+      POSTGRES_DB: forex_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - forex-net
+
+volumes:
+  postgres_data:
+
 # ======================================================
-# 🌐 Networks
+# Networks
 # ======================================================
 networks:
   forex-net:

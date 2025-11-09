@@ -3,8 +3,8 @@ spring:
     pg:
       url: jdbc:postgresql://${POSTGRES_HOST:localhost}:5432/forex_db
       jdbcUrl: jdbc:postgresql://${POSTGRES_HOST:localhost}:5432/forex_db
-      username: ${POSTGRES_USER:forex}
-      password: ${POSTGRES_PASSWORD:forex}
+      username: ${POSTGRES_USER:forex_user}
+      password: ${POSTGRES_PASSWORD:forex_pass}
       driver-class-name: org.postgresql.Driver
       hikari:
         pool-name: HikariPool-PG
