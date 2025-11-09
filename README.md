@@ -34,7 +34,7 @@
 | **CI/CD** | GitHub Actions, Helm, Docker |
 | **Containerization** | Docker, Compose, Kubernetes |
 
-## 📁 Repository Structure
+## Repository Structure
 ```text
 Forex-Events-Kafka-OAuth-Impl/
 ├── src/main/java/com/jk/labs/kafka_oauth/
