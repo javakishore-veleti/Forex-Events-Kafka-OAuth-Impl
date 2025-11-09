@@ -50,9 +50,37 @@ forex:
 feature:
   toggles:
     kafka:
+      oauth_provider:
+        keycloak:
+          enabled: true
+        google:
+          enabled: false
+        github:
+          enabled: true
+        microsoft:
+          enabled: true
       consumers:
         keycloak-oauth:
           enabled: true
+        oauth_provider:
+          keycloak:
+            enabled: true
+          google:
+            enabled: false
+          github:
+            enabled: true
+          microsoft:
+            enabled: false
+      producers:
+        oauth_provider:
+          keycloak:
+            enabled: true
+          google:
+            enabled: false
+          github:
+            enabled: true
+          microsoft:
+            enabled: true
 
 management:
   tracing:
