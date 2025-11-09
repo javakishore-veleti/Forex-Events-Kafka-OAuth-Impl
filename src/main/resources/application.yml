@@ -41,3 +41,23 @@ forex:
       github: oauth.github.events
       audit: oauth.audit
       errors: oauth.errors
+
+
+feature:
+  toggles:
+    kafka:
+      consumers:
+        keycloak-oauth:
+          enabled: true
+
+management:
+  tracing:
+    enabled: true
+  otlp:
+    tracing:
+      endpoint: http://localhost:4317
+      protocol: grpc
+  prometheus:
+    metrics:
+      export:
+        enabled: true

@@ -1,0 +1,46 @@
+{
+  "id": null,
+  "uid": "jvm-metrics",
+  "title": "JVM Metrics",
+  "schemaVersion": 37,
+  "version": 1,
+  "refresh": "10s",
+  "panels": [
+    {
+      "type": "graph",
+      "title": "Heap Used",
+      "datasource": "Prometheus",
+      "targets": [
+        { "expr": "jvm_memory_used_bytes{area='heap'}", "legendFormat": "{{id}}", "refId": "A" }
+      ],
+      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 6 }
+    },
+    {
+      "type": "graph",
+      "title": "GC Pause Duration",
+      "datasource": "Prometheus",
+      "targets": [
+        { "expr": "rate(jvm_gc_pause_seconds_sum[1m])", "legendFormat": "{{action}}", "refId": "A" }
+      ],
+      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 6 }
+    },
+    {
+      "type": "stat",
+      "title": "Threads (Live)",
+      "datasource": "Prometheus",
+      "targets": [
+        { "expr": "jvm_threads_live_threads", "refId": "A" }
+      ],
+      "gridPos": { "x": 0, "y": 6, "w": 6, "h": 3 }
+    },
+    {
+      "type": "stat",
+      "title": "Non-Heap Used",
+      "datasource": "Prometheus",
+      "targets": [
+        { "expr": "jvm_memory_used_bytes{area='nonheap'}", "refId": "A" }
+      ],
+      "gridPos": { "x": 6, "y": 6, "w": 6, "h": 3 }
+    }
+  ]
+}
