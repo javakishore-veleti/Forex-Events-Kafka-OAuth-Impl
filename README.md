@@ -10,6 +10,8 @@
 
 **Forex Events Kafka OAuth Implementation** is an enterprise-grade, open-source reference project demonstrating:
 
+- Primary focus is to showcase Spring Boot + kafka + OAUTH Bearer for Kafka Procuers and Consumers
+- Also show case Kafka Listener(s) with different Kafka Bootstrap servers within the single Spring Boot application
 - Real-time **Forex trade event streaming** via **Apache Kafka**
 - **OAuth2/OIDC-secured Kafka clients** (Keycloak, Okta, Auth0, Azure)
 - **Spring Boot 3 + JDK 17**
