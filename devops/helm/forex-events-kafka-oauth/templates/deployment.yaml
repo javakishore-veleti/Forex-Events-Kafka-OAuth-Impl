@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "forex-events-kafka-oauth.fullname" . }}
+  labels:
+    app: {{ include "forex-events-kafka-oauth.name" . }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "forex-events-kafka-oauth.name" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "forex-events-kafka-oauth.name" . }}
+    spec:
+      containers:
+        - name: app
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: {{ include "forex-events-kafka-oauth.fullname" . }}-config
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}

@@ -1,0 +1,15 @@
+replicaCount: 2
+
+image:
+  repository: docker.io/forex-events-kafka-oauth
+  tag: stg
+  pullPolicy: Always
+
+env:
+  springProfile: stg
+  datasourceUrl: jdbc:postgresql://postgres-stg:5432/forex_db
+  datasourceUser: forex
+  datasourcePassword: forex
+  otelServiceName: forex-events-kafka-oauth-stg
+  otelEndpoint: http://jaeger-stg:4317
+  kafkaBrokers: kafka-stg:9092

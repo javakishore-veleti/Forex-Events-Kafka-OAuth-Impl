@@ -1,0 +1,15 @@
+apiVersion: v2
+name: forex-events-kafka-oauth
+description: Helm chart for deploying the Forex Events Kafka OAuth Spring Boot microservice
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+
+keywords:
+  - springboot
+  - kafka
+  - oauth2
+  - opentelemetry
+  - forex
+
+icon: "https://raw.githubusercontent.com/cncf/artwork/main/projects/helm/icon/color/helm-icon-color.png"
