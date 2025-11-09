@@ -1,10 +1,10 @@
 spring:
   datasource:
     pg:
-      url: jdbc:postgresql://localhost:5432/forex_db
-      jdbcUrl: jdbc:postgresql://localhost:5432/forex_db
-      username: forex
-      password: forex
+      url: jdbc:postgresql://${POSTGRES_HOST:localhost}:5432/forex_db
+      jdbcUrl: jdbc:postgresql://${POSTGRES_HOST:localhost}:5432/forex_db
+      username: ${POSTGRES_USER:forex}
+      password: ${POSTGRES_PASSWORD:forex}
       driver-class-name: org.postgresql.Driver
       hikari:
         pool-name: HikariPool-PG
@@ -22,14 +22,18 @@ spring:
         maximum-pool-size: 3
         minimum-idle: 1
 
+  kafka:
+    # 👇 Switches automatically between local and docker network hostnames
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:29092}
+
 otel:
   service:
     name: forex-events-kafka-oauth
   exporter:
     otlp:
-      endpoint: http://localhost:4318
+      endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://localhost:4318}
   logs:
-    exporter: none  # Jaeger doesn't handle logs
+    exporter: none  # Jaeger doesn’t handle logs
   metrics:
     exporter: none  # Prometheus scrapes directly
 
@@ -41,7 +45,6 @@ forex:
       github: oauth.github.events
       audit: oauth.audit
       errors: oauth.errors
-
 
 feature:
   toggles:
@@ -55,7 +58,7 @@ management:
     enabled: true
   otlp:
     tracing:
-      endpoint: http://localhost:4317
+      endpoint: ${OTEL_COLLECTOR_GRPC_ENDPOINT:http://localhost:4317}
       protocol: grpc
   prometheus:
     metrics:
