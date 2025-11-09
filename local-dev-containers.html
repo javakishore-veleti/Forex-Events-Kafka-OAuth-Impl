@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Forex Events Kafka OAuth - Local Dev Containers</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f5f6fa;
+            color: #2d3436;
+            margin: 0;
+            padding: 40px;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        table {
+            width: 95%;
+            max-width: 1000px;
+            margin: auto;
+            border-collapse: collapse;
+            background: #fff;
+            box-shadow: 0 0 12px rgba(0,0,0,0.1);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        th, td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        th {
+            background: #0984e3;
+            color: #fff;
+            font-size: 1.05em;
+        }
+        tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+        tr:hover {
+            background: #eaf3ff;
+        }
+        a {
+            color: #0984e3;
+            font-weight: 500;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        code {
+            background: #f0f0f0;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            color: #636e72;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+<h1>Forex Events Kafka OAuth - Local Development Dashboard</h1>
+<table>
+    <thead>
+    <tr>
+        <th>Service</th>
+        <th>Purpose</th>
+        <th>URL / Port</th>
+        <th>Default Login</th>
+        <th>Password</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>🧭 Forex App (Spring Boot)</td>
+        <td>Main application (run via IntelliJ or <code>npm run run:local</code>)</td>
+        <td><a href="http://localhost:8080" target="_blank">http://localhost:8080</a></td>
+        <td>-</td>
+        <td>-</td>
+    </tr>
+    <tr>
+        <td>🐘 PostgreSQL</td>
+        <td>Primary application database</td>
+        <td><code>localhost:5432</code></td>
+        <td><code>forex</code></td>
+        <td><code>forex</code></td>
+    </tr>
+    <tr>
+        <td>🗂️ pgAdmin</td>
+        <td>Web UI for managing PostgreSQL</td>
+        <td><a href="http://localhost:5050" target="_blank">http://localhost:5050</a></td>
+        <td><code>admin@forex.dev</code></td>
+        <td><code>admin</code></td>
+    </tr>
+    <tr>
+        <td>💬 Kafka Broker</td>
+        <td>Event streaming platform</td>
+        <td><code>localhost:9092</code></td>
+        <td>-</td>
+        <td>-</td>
+    </tr>
+    <tr>
+        <td>🦉 Kafka UI</td>
+        <td>Web UI for managing Kafka topics and messages</td>
+        <td><a href="http://localhost:8085" target="_blank">http://localhost:8085</a></td>
+        <td>-</td>
+        <td>-</td>
+    </tr>
+    <tr>
+        <td>🧩 Zookeeper</td>
+        <td>Kafka coordination service</td>
+        <td><code>localhost:2181</code></td>
+        <td>-</td>
+        <td>-</td>
+    </tr>
+    <tr>
+        <td>🔐 Keycloak</td>
+        <td>Identity and OAuth2 provider</td>
+        <td><a href="http://localhost:8081" target="_blank">http://localhost:8081</a></td>
+        <td><code>admin</code></td>
+        <td><code>admin</code></td>
+    </tr>
+    <tr>
+        <td>📊 Prometheus</td>
+        <td>Metrics collection & monitoring</td>
+        <td><a href="http://localhost:9090" target="_blank">http://localhost:9090</a></td>
+        <td>-</td>
+        <td>-</td>
+    </tr>
+    <tr>
+        <td>📈 Grafana</td>
+        <td>Metrics visualization & dashboards</td>
+        <td><a href="http://localhost:3000" target="_blank">http://localhost:3000</a></td>
+        <td><code>admin</code></td>
+        <td><code>admin</code></td>
+    </tr>
+    <tr>
+        <td>🔎 Jaeger</td>
+        <td>Distributed tracing UI</td>
+        <td><a href="http://localhost:16686" target="_blank">http://localhost:16686</a></td>
+        <td>-</td>
+        <td>-</td>
+    </tr>
+    </tbody>
+</table>
+
+<footer>
+    🧠 <strong>Tip:</strong> Start containers with <code>npm run infra:up</code>, stop with <code>npm run infra:down</code>.<br>
+    🚀 Generated for local environment monitoring and quick access.
+</footer>
+</body>
+</html>

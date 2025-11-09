@@ -1,6 +1,43 @@
-server:
-  port: 8080
-
 spring:
-    application:
-      name: Forex-Events-kafka-OAuth-Impl
+  datasource:
+    pg:
+      url: jdbc:postgresql://localhost:5432/forex_db
+      jdbcUrl: jdbc:postgresql://localhost:5432/forex_db
+      username: forex
+      password: forex
+      driver-class-name: org.postgresql.Driver
+      hikari:
+        pool-name: HikariPool-PG
+        maximum-pool-size: 5
+        minimum-idle: 1
+
+    h2:
+      url: jdbc:h2:mem:forex_h2;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+      jdbcUrl: jdbc:h2:mem:forex_h2;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+      username: sa
+      password:
+      driver-class-name: org.h2.Driver
+      hikari:
+        pool-name: HikariPool-H2
+        maximum-pool-size: 3
+        minimum-idle: 1
+
+otel:
+  service:
+    name: forex-events-kafka-oauth
+  exporter:
+    otlp:
+      endpoint: http://localhost:4318
+  logs:
+    exporter: none  # Jaeger doesn't handle logs
+  metrics:
+    exporter: none  # Prometheus scrapes directly
+
+forex:
+  kafka:
+    topics:
+      keycloak: oauth.keycloak.events
+      google: oauth.google.events
+      github: oauth.github.events
+      audit: oauth.audit
+      errors: oauth.errors

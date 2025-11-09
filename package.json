@@ -6,17 +6,25 @@
     "clean": "mvn clean",
     "compile": "mvn compile",
     "test": "mvn test",
-    "build": "mvn package -DskipTests",
+    "build": "mvn clean install package -DskipTests",
+
     "run:local": "SPRING_PROFILES_ACTIVE=local java -jar target/forex-events-kafka-oauth-impl-1.0.0.jar",
-    "start:compose": "docker-compose -f devops/deployment/local-dev/docker-compose.local.yml up --build",
-    "stop:compose": "docker-compose -f devops/deployment/local-dev/docker-compose.local.yml down",
+
+    "infra:up": "docker compose -f devops/deployment/local-dev/docker-compose.local.yml up -d",
+    "infra:down": "docker compose -f devops/deployment/local-dev/docker-compose.local.yml down -v --remove-orphans",
+    "infra:restart": "npm run infra:down && npm run infra:up",
+
     "publish:image": "mvn compile jib:build -DskipTests -Djib.skip=false",
-    "publish:helm": "helm package devops/helm/kishore-veleti-forex-oauth-kafka && helm repo index .",
-    "deploy:stg": "helm upgrade --install forex-oauth kishore-veleti/kishore-veleti-forex-oauth-kafka -f devops/helm/kishore-veleti-forex-oauth-kafka/values-stg.yaml --namespace stg --create-namespace",
-    "deploy:prod": "helm upgrade --install forex-oauth kishore-veleti/kishore-veleti-forex-oauth-kafka -f devops/helm/kishore-veleti-forex-oauth-kafka/values-prod.yaml --namespace prod --create-namespace",
+    "publish:helm": "helm package devops/helm/forex-events-kafka-oauth && helm repo index .",
+
+    "deploy:stg": "helm upgrade --install forex-oauth forex-events-kafka-oauth -f devops/helm/forex-events-kafka-oauth/values-stg.yaml --namespace stg --create-namespace",
+    "deploy:prod": "helm upgrade --install forex-oauth forex-events-kafka-oauth -f devops/helm/forex-events-kafka-oauth/values-prod.yaml --namespace prod --create-namespace",
+
     "publish:trades": "curl -X POST http://localhost:8080/api/forex/publish",
     "smoketest": "curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/actuator/health | grep 200 && echo '✅ Health OK' || echo '❌ Health check failed'",
-    "logs": "docker logs -f forex-oauth-app"
+    "logs": "docker logs -f forex-oauth-app",
+
+    "dev:local": "npm run infra:up && sleep 10 && npm run run:local"
   },
   "engines": {
     "node": ">=18"

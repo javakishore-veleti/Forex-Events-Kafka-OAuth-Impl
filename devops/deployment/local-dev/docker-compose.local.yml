@@ -1,0 +1,187 @@
+version: "3.9"
+
+services:
+  # ======================================================
+  # PostgreSQL
+  # ======================================================
+  postgres:
+    image: postgres:16
+    container_name: forex-events-kafka-oauth-db
+    environment:
+      POSTGRES_DB: forex_db
+      POSTGRES_USER: forex
+      POSTGRES_PASSWORD: forex
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - forex-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U forex -d forex_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: forex-events-kafka-oauth-pgadmin
+    ports:
+      - "5050:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@forex.dev
+      PGADMIN_DEFAULT_PASSWORD: admin
+    depends_on:
+      - postgres
+    networks:
+      - forex-net
+
+  # ======================================================
+  # Kafka + Zookeeper
+  # ======================================================
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.0
+    container_name: forex-events-kafka-oauth-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    networks:
+      - forex-net
+
+  kafka:
+    image: confluentinc/cp-kafka:7.6.0
+    container_name: forex-events-kafka-oauth-kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"     # internal Docker access
+      - "29092:29092"   # host (Mac) access
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      # Use different ports for internal vs host access
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_HOST://0.0.0.0:29092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    networks:
+      - forex-net
+    healthcheck:
+      test: [ "CMD", "bash", "-c", "nc -z localhost 9092" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: forex-events-kafka-oauth-kafka-ui
+    depends_on:
+      kafka:
+        condition: service_healthy
+    ports:
+      - "8085:8080"
+    environment:
+      - KAFKA_CLUSTERS_0_NAME=forex-events-kafka-oauth-cluster
+      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:9092    # no localhost
+      - KAFKA_CLUSTERS_0_ZOOKEEPER=zookeeper:2181       # removed accidental leading space
+      - KAFKA_CLUSTERS_0_READONLY=false
+    networks:
+      - forex-net
+
+  kafka-setup:
+    image: confluentinc/cp-kafka:7.6.0
+    container_name: forex-events-kafka-oauth-setup
+    depends_on:
+      kafka:
+        condition: service_healthy
+    volumes:
+      - ./scripts/create-topics.sh:/tmp/create-topics.sh
+    entrypoint: [ "bash", "/tmp/create-topics.sh" ]
+    networks:
+      - forex-net
+
+  # ======================================================
+  # Keycloak
+  # ======================================================
+  keycloak:
+    image: quay.io/keycloak/keycloak:25.0.2
+    container_name: forex-events-kafka-oauth-keycloak
+    command:
+      - start-dev
+    environment:
+      KC_DB: dev-mem
+      KC_HTTP_PORT: 8081
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    ports:
+      - "8081:8081"
+    networks:
+      - forex-net
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8081/ || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  # ======================================================
+  # Prometheus
+  # ======================================================
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    container_name: forex-events-kafka-oauth-prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - forex-net
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --web.enable-lifecycle
+
+  # ======================================================
+  # Jaeger (Tracing)
+  # ======================================================
+  jaeger:
+    image: jaegertracing/all-in-one:1.57
+    container_name: forex-events-kafka-oauth-jaeger
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+    ports:
+      - "16686:16686"   # UI
+      - "4317:4317"     # OTLP gRPC
+      - "4318:4318"     # OTLP HTTP
+    networks:
+      - forex-net
+
+  # ======================================================
+  # Grafana
+  # ======================================================
+  grafana:
+    image: grafana/grafana:11.1.0
+    container_name: forex-events-kafka-oauth-grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning
+    networks:
+      - forex-net
+
+# ======================================================
+# VOLUMES & NETWORKS
+# ======================================================
+volumes:
+  pgdata:
+
+networks:
+  forex-net:
+    driver: bridge
