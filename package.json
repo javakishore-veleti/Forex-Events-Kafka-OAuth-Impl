@@ -11,6 +11,8 @@
     "infra:up": "docker compose -f devops/deployment/local-dev/docker-compose.local.yml up -d",
     "infra:down": "docker compose -f devops/deployment/local-dev/docker-compose.local.yml down -v --remove-orphans",
     "infra:restart": "npm run infra:down && npm run infra:up",
+    "infra-skycloak:up": "docker compose -f devops/deployment/local-dev/skycloak/docker-compose.yaml up -d",
+    "infra-skycloak:down": "docker compose -f devops/deployment/local-dev/skycloak/docker-compose.yaml down -v --remove-orphans",
     "publish:image": "mvn compile jib:build -DskipTests -Djib.skip=false",
     "publish:helm": "helm package devops/helm/forex-events-kafka-oauth && helm repo index .",
     "deploy:stg": "helm upgrade --install forex-oauth forex-events-kafka-oauth -f devops/helm/forex-events-kafka-oauth/values-stg.yaml --namespace stg --create-namespace",

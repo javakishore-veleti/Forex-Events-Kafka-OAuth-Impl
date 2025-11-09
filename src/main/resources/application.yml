@@ -63,6 +63,23 @@ forex:
       microsoft: oauth.microsoft.events
       audit: oauth.audit
       errors: oauth.errors
+    oauth:
+      keycloak:
+        token-endpoint: http://localhost:8081/realms/forex/protocol/openid-connect/token
+        client-id: forex-keycloak-client
+        client-secret: forex-secret
+      google:
+        token-endpoint: https://accounts.google.com/o/oauth2/token
+        client-id: forex-google-client
+        client-secret: forex-secret
+      github:
+        token-endpoint: https://github.com/login/oauth/access_token
+        client-id: forex-github-client
+        client-secret: forex-secret
+      microsoft:
+        token-endpoint: https://login.microsoftonline.com/common/oauth2/v2.0/token
+        client-id: forex-microsoft-client
+        client-secret: forex-secret
 
 
 feature:

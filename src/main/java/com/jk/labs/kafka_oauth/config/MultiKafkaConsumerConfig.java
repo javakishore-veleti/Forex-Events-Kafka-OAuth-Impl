@@ -2,7 +2,9 @@ package com.jk.labs.kafka_oauth.config;
 
 import com.jk.labs.kafka_oauth.dto.TradeEventMessage;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.common.config.SaslConfigs;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -48,6 +50,9 @@ public class MultiKafkaConsumerConfig {
         props.put(JsonDeserializer.VALUE_DEFAULT_TYPE, TradeEventMessage.class);
         props.put(JsonDeserializer.TRUSTED_PACKAGES, "com.jk.labs.kafka_oauth.dto");
 
+        // Apply SASL/OAUTHBEARER settings
+        addSaslOauthBearerProps(props, provider);
+
         log.info("Kafka ConsumerFactory created for '{}' → bootstrap.servers={}", provider, bootstrap);
         //return new DefaultKafkaConsumerFactory<>(props, new StringDeserializer(), deserializer);
         return new DefaultKafkaConsumerFactory<>(props);
@@ -85,5 +90,33 @@ public class MultiKafkaConsumerConfig {
     @ConditionalOnProperty(value = "feature.toggles.kafka.consumers.oauth_provider.microsoft.enabled", havingValue = "true")
     public ConcurrentKafkaListenerContainerFactory<String, TradeEventMessage> microsoftKafkaListenerContainerFactory() {
         return listenerFactoryFor("microsoft");
+    }
+
+    private void addSaslOauthBearerProps(Map<String, Object> props, String provider) {
+        Map<String, String> oauthConfig = kafkaClusterConfig.getOauthConfig(provider);
+        if (oauthConfig == null) return;
+
+        props.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SASL_SSL");
+        props.put(SaslConfigs.SASL_MECHANISM, "OAUTHBEARER");
+        props.put(SaslConfigs.SASL_JAAS_CONFIG,
+                "org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required;");
+        props.put(SaslConfigs.SASL_LOGIN_CALLBACK_HANDLER_CLASS,
+                "org.apache.kafka.common.security.oauthbearer.secured.OAuthBearerLoginCallbackHandler");
+
+        props.put("oauth.token.endpoint.uri", oauthConfig.get("token-endpoint"));
+        props.put("oauth.client.id", oauthConfig.get("client-id"));
+        props.put("oauth.client.secret", oauthConfig.get("client-secret"));
+
+        props.put("sasl.oauthbearer.token.endpoint.url", oauthConfig.get("token-endpoint"));
+        props.put("sasl.oauthbearer.client.id", oauthConfig.get("client-id"));
+        props.put("sasl.oauthbearer.clientId", oauthConfig.get("client-id"));
+        props.put("sasl.oauthbearer.client.secret", oauthConfig.get("client-secret"));
+        props.put("sasl.oauthbearer.clientSecret", oauthConfig.get("client-secret"));
+
+        String jassConfig = "org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required ";
+        jassConfig = jassConfig + "scope='BrokerApplicationId/.default' ";
+        jassConfig = jassConfig + "clientId='" + oauthConfig.get("client-id") + "' ";
+        jassConfig = jassConfig + "clientSecret='" + oauthConfig.get("client-secret") + "' ;";
+        props.put(SaslConfigs.SASL_JAAS_CONFIG, jassConfig);
     }
 }

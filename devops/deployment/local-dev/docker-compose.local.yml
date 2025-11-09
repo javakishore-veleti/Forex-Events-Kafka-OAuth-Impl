@@ -6,7 +6,7 @@ services:
   # ======================================================
   zookeeper:
     image: confluentinc/cp-zookeeper:7.6.0
-    container_name: forex-zookeeper
+    container_name: forex-events-kafka-oauth-zookeeper
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
@@ -28,7 +28,7 @@ services:
 
   kafka-keycloak:
     image: confluentinc/cp-kafka:7.6.0
-    container_name: kafka-keycloak
+    container_name: forex-events-kafka-oauth-kafka-keycloak
     depends_on:
       zookeeper:
         condition: service_healthy
@@ -55,7 +55,7 @@ services:
 
   kafka-google:
     image: confluentinc/cp-kafka:7.6.0
-    container_name: kafka-google
+    container_name: forex-events-kafka-oauth-google
     depends_on:
       zookeeper:
         condition: service_healthy
@@ -81,7 +81,7 @@ services:
 
   kafka-github:
     image: confluentinc/cp-kafka:7.6.0
-    container_name: kafka-github
+    container_name: forex-events-kafka-oauth-github
     depends_on:
       zookeeper:
         condition: service_healthy
@@ -107,7 +107,7 @@ services:
 
   kafka-microsoft:
     image: confluentinc/cp-kafka:7.6.0
-    container_name: kafka-microsoft
+    container_name: forex-events-kafka-oauth-microsoft
     depends_on:
       zookeeper:
         condition: service_healthy
@@ -136,7 +136,7 @@ services:
   # ======================================================
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
-    container_name: kafka-oauth-ui
+    container_name: forex-events-kafka-oauth-ui
     depends_on:
       - kafka-keycloak
       - kafka-google
@@ -161,7 +161,7 @@ services:
   # ======================================================
   kafka-setup:
     image: confluentinc/cp-kafka:7.6.0
-    container_name: kafka-setup
+    container_name: forex-events-kafka-oauth-setup
     depends_on:
       kafka-keycloak:
         condition: service_healthy
@@ -177,29 +177,38 @@ services:
     networks:
       - forex-net
 
-  # ======================================================
-  # Keycloak
-  # ======================================================
   keycloak:
-    image: quay.io/keycloak/keycloak:25.0.2
-    container_name: keycloak
-    command: [ "start-dev" ]
+    image: quay.io/keycloak/keycloak:21.1.2
+    container_name: forex-events-kafka-oauth-keycloak
+    command:
+      - start-dev
+      - --http-enabled=true
+      - --hostname-strict=false
+      - --hostname-strict-https=false
     environment:
-      KC_DB: dev-mem
-      KC_HTTP_PORT: 8081
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_HTTP_ENABLED: "true"
+      KC_HOSTNAME_STRICT: "false"
+      KC_HOSTNAME_STRICT_HTTPS: "false"
+      # Add these for the admin console
+      KC_HOSTNAME_URL: "http://localhost:8080"
     ports:
-      - "8081:8081"
+      - "8080:8080"
     networks:
       - forex-net
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/realms/master" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
   # ======================================================
   # Prometheus
   # ======================================================
   prometheus:
     image: prom/prometheus:v2.53.0
-    container_name: prometheus
+    container_name: forex-events-kafka-oauth-prometheus
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
     ports:
@@ -216,7 +225,7 @@ services:
   # ======================================================
   grafana:
     image: grafana/grafana:11.1.0
-    container_name: grafana
+    container_name: forex-events-kafka-oauth-grafana
     environment:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
@@ -234,7 +243,7 @@ services:
   # ======================================================
   jaeger:
     image: jaegertracing/all-in-one:1.57
-    container_name: jaeger
+    container_name: forex-events-kafka-oauth-jaeger
     environment:
       COLLECTOR_OTLP_ENABLED: "true"
     ports:
@@ -249,7 +258,7 @@ services:
   # ======================================================
   postgres:
     image: postgres:16
-    container_name: forex-postgres
+    container_name: forex-events-kafka-oauth-postgres
     environment:
       POSTGRES_USER: forex_user
       POSTGRES_PASSWORD: forex_pass
