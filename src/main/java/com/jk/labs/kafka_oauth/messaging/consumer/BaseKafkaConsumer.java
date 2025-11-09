@@ -1,29 +1,39 @@
 package com.jk.labs.kafka_oauth.messaging.consumer;
 
-import com.jk.labs.kafka_oauth.config.KafkaClusterConfig;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.messaging.handler.annotation.Payload;
 
+@Slf4j
 public abstract class BaseKafkaConsumer {
 
-    @Autowired
-    private KafkaClusterConfig kafkaClusterConfig;
+    public BaseKafkaConsumer() {
+        log.info("Initializing BaseKafkaConsumer for topic: " + getTopicName());
+    }
 
     @SuppressWarnings("unused")
     public abstract String getTopicName();
 
-    @KafkaListener(topics = "#{__listener.getTopicName()}", groupId = "forex-group")
+    @KafkaListener(
+            topics = "#{__listener.getTopicName()}",
+            groupId = "forex-group",
+            containerFactory = "#{__listener.getListenerFactoryName()}"
+    )
     public void listen(@Payload String message, Acknowledgment ack) {
         processMessage(message);
         ack.acknowledge();
     }
 
-    public void configureKafkaTemplate(String provider) {
-        String bootstrapServer = kafkaClusterConfig.getBootstrap(provider);
-        // Use this when building KafkaTemplate or ConsumerFactory
-    }
-
     protected abstract void processMessage(String message);
+
+    // Each subclass will tell which listener container factory it needs
+    public String getListenerFactoryName() {
+        String className = getClass().getSimpleName().toLowerCase();
+        if (className.contains("keycloak")) return "keycloakKafkaListenerContainerFactory";
+        if (className.contains("google")) return "googleKafkaListenerContainerFactory";
+        if (className.contains("github")) return "githubKafkaListenerContainerFactory";
+        if (className.contains("microsoft")) return "microsoftKafkaListenerContainerFactory";
+        return "keycloakKafkaListenerContainerFactory";
+    }
 }

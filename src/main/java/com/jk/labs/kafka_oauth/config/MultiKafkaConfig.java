@@ -17,51 +17,100 @@ import java.util.Map;
 
 @Slf4j
 @Configuration
+@SuppressWarnings("SpringJavaAutowiredFieldsWarningInspection")
 public class MultiKafkaConfig {
 
-    @SuppressWarnings("SpringJavaAutowiredFieldsWarningInspection")
     @Autowired
     private KafkaClusterConfig kafkaClusterConfig;
 
+    /**
+     * Common producer properties shared across all providers.
+     */
     private Map<String, Object> baseProducerProps() {
         Map<String, Object> props = new HashMap<>();
         props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        props.put(ProducerConfig.ACKS_CONFIG, "all");
+        props.put(ProducerConfig.RETRIES_CONFIG, 3);
+        props.put(ProducerConfig.LINGER_MS_CONFIG, 5);
         return props;
     }
 
+    /**
+     * Builds a producer factory for the given OAuth provider.
+     */
     private ProducerFactory<String, String> producerFactoryFor(String provider) {
         Map<String, Object> props = new HashMap<>(baseProducerProps());
-        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaClusterConfig.getBootstrap(provider));
+        String bootstrap = kafkaClusterConfig.getBootstrap(provider);
+
+        if (bootstrap == null || bootstrap.isBlank()) {
+            log.warn("No Kafka bootstrap found for provider '{}'. Falling back to localhost:9093", provider);
+            bootstrap = "localhost:9093";
+        }
+
+        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrap);
+        log.info("Kafka ProducerFactory created for '{}' → bootstrap.servers={}", provider, bootstrap);
+
         return new DefaultKafkaProducerFactory<>(props);
+    }
+
+    // ---------------------------------------------------------------------
+    // Provider-specific ProducerFactories & KafkaTemplates
+    // ---------------------------------------------------------------------
+
+    @Bean(name = "keycloakProducerFactory")
+    @ConditionalOnProperty(value = "feature.toggles.kafka.producers.oauth_provider.keycloak.enabled", havingValue = "true")
+    public ProducerFactory<String, String> keycloakProducerFactory() {
+        return producerFactoryFor("keycloak");
     }
 
     @Bean(name = "keycloakKafkaTemplate")
     @ConditionalOnProperty(value = "feature.toggles.kafka.producers.oauth_provider.keycloak.enabled", havingValue = "true")
     public KafkaTemplate<String, String> keycloakKafkaTemplate() {
-        return new KafkaTemplate<>(producerFactoryFor("keycloak"));
+        return new KafkaTemplate<>(keycloakProducerFactory());
+    }
+
+    @Bean(name = "googleProducerFactory")
+    @ConditionalOnProperty(value = "feature.toggles.kafka.producers.oauth_provider.google.enabled", havingValue = "true")
+    public ProducerFactory<String, String> googleProducerFactory() {
+        return producerFactoryFor("google");
     }
 
     @Bean(name = "googleKafkaTemplate")
     @ConditionalOnProperty(value = "feature.toggles.kafka.producers.oauth_provider.google.enabled", havingValue = "true")
     public KafkaTemplate<String, String> googleKafkaTemplate() {
-        return new KafkaTemplate<>(producerFactoryFor("google"));
+        return new KafkaTemplate<>(googleProducerFactory());
+    }
+
+    @Bean(name = "githubProducerFactory")
+    @ConditionalOnProperty(value = "feature.toggles.kafka.producers.oauth_provider.github.enabled", havingValue = "true")
+    public ProducerFactory<String, String> githubProducerFactory() {
+        return producerFactoryFor("github");
     }
 
     @Bean(name = "githubKafkaTemplate")
     @ConditionalOnProperty(value = "feature.toggles.kafka.producers.oauth_provider.github.enabled", havingValue = "true")
     public KafkaTemplate<String, String> githubKafkaTemplate() {
-        return new KafkaTemplate<>(producerFactoryFor("github"));
+        return new KafkaTemplate<>(githubProducerFactory());
+    }
+
+    @Bean(name = "microsoftProducerFactory")
+    @ConditionalOnProperty(value = "feature.toggles.kafka.producers.oauth_provider.microsoft.enabled", havingValue = "true")
+    public ProducerFactory<String, String> microsoftProducerFactory() {
+        return producerFactoryFor("microsoft");
     }
 
     @Bean(name = "microsoftKafkaTemplate")
     @ConditionalOnProperty(value = "feature.toggles.kafka.producers.oauth_provider.microsoft.enabled", havingValue = "true")
     public KafkaTemplate<String, String> microsoftKafkaTemplate() {
-        return new KafkaTemplate<>(producerFactoryFor("microsoft"));
+        return new KafkaTemplate<>(microsoftProducerFactory());
     }
 
+    /**
+     * Log all brokers loaded from configuration for quick visibility.
+     */
     @PostConstruct
     public void logKafkaConfigs() {
-        log.info(">>> Loaded Kafka brokers: {}" , kafkaClusterConfig.getBrokers());
+        log.info(">>> Loaded Kafka brokers: {}", kafkaClusterConfig.getBrokers());
     }
 }
