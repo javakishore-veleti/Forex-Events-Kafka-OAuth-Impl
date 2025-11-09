@@ -2,119 +2,187 @@ version: "3.9"
 
 services:
   # ======================================================
-  # PostgreSQL
-  # ======================================================
-  postgres:
-    image: postgres:16
-    container_name: forex-events-kafka-oauth-db
-    environment:
-      POSTGRES_DB: forex_db
-      POSTGRES_USER: forex
-      POSTGRES_PASSWORD: forex
-    ports:
-      - "5432:5432"
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    networks:
-      - forex-net
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U forex -d forex_db"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  pgadmin:
-    image: dpage/pgadmin4:latest
-    container_name: forex-events-kafka-oauth-pgadmin
-    ports:
-      - "5050:80"
-    environment:
-      PGADMIN_DEFAULT_EMAIL: admin@forex.dev
-      PGADMIN_DEFAULT_PASSWORD: admin
-    depends_on:
-      - postgres
-    networks:
-      - forex-net
-
-  # ======================================================
-  # Kafka + Zookeeper
+  # 🦓 ZooKeeper
   # ======================================================
   zookeeper:
     image: confluentinc/cp-zookeeper:7.6.0
-    container_name: forex-events-kafka-oauth-zookeeper
+    container_name: forex-zookeeper
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
+      # 👇 Enable "ruok" for health probes
+      KAFKA_OPTS: "-Dzookeeper.4lw.commands.whitelist=ruok"
     ports:
       - "2181:2181"
     networks:
       - forex-net
-
-  kafka:
-    image: confluentinc/cp-kafka:7.6.0
-    container_name: forex-events-kafka-oauth-kafka
-    depends_on:
-      - zookeeper
-    ports:
-      - "9092:9092"     # internal access (for other containers)
-      - "29092:29092"   # external access (for IntelliJ on host)
-    environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-
-      # Two listener ports: one for containers, one for host access
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_HOST://0.0.0.0:29092
-
-      # 👇 Fix: Advertise localhost for host access, kafka for Docker-internal access
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
-
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-    networks:
-      - forex-net
     healthcheck:
-      test: [ "CMD", "bash", "-c", "nc -z localhost 9092" ]
+      test: [ "CMD", "bash", "-c", "echo ruok | nc 127.0.0.1 2181 | grep imok || exit 1" ]
       interval: 10s
       timeout: 5s
       retries: 10
 
+  # ======================================================
+  # ☕ Kafka Brokers (one per OAuth provider)
+  # ======================================================
+
+  kafka-keycloak:
+    image: confluentinc/cp-kafka:7.6.0
+    container_name: kafka-keycloak
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    ports:
+      - "9093:9093"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-keycloak:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      # OAuth2 Token endpoint (Keycloak)
+      KAFKA_OAUTH_TOKEN_ENDPOINT_URI: http://keycloak:8081/realms/forex/protocol/openid-connect/token
+    healthcheck:
+      test: ["CMD", "bash", "-c", "nc -z localhost 9093"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - forex-net
+
+  kafka-google:
+    image: confluentinc/cp-kafka:7.6.0
+    container_name: kafka-google
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    ports:
+      - "9094:9094"
+    environment:
+      KAFKA_BROKER_ID: 2
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9094
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-google:9094
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      # OAuth2 Token endpoint (Google)
+      KAFKA_OAUTH_TOKEN_ENDPOINT_URI: https://oauth2.googleapis.com/token
+    healthcheck:
+      test: ["CMD", "bash", "-c", "nc -z localhost 9094"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - forex-net
+
+  kafka-github:
+    image: confluentinc/cp-kafka:7.6.0
+    container_name: kafka-github
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    ports:
+      - "9095:9095"
+    environment:
+      KAFKA_BROKER_ID: 3
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9095
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-github:9095
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      # OAuth2 Token endpoint (GitHub)
+      KAFKA_OAUTH_TOKEN_ENDPOINT_URI: https://github.com/login/oauth/access_token
+    healthcheck:
+      test: ["CMD", "bash", "-c", "nc -z localhost 9095"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - forex-net
+
+  kafka-microsoft:
+    image: confluentinc/cp-kafka:7.6.0
+    container_name: kafka-microsoft
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    ports:
+      - "9096:9096"
+    environment:
+      KAFKA_BROKER_ID: 4
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9096
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-microsoft:9096
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      # OAuth2 Token endpoint (Microsoft)
+      KAFKA_OAUTH_TOKEN_ENDPOINT_URI: https://login.microsoftonline.com/common/oauth2/v2.0/token
+    healthcheck:
+      test: ["CMD", "bash", "-c", "nc -z localhost 9096"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - forex-net
+
+  # ======================================================
+  # 📊 Kafka UI (single pane for all clusters)
+  # ======================================================
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
-    container_name: forex-events-kafka-oauth-kafka-ui
+    container_name: kafka-oauth-ui
     depends_on:
-      kafka:
-        condition: service_healthy
+      - kafka-keycloak
+      - kafka-google
+      - kafka-github
+      - kafka-microsoft
     ports:
       - "8085:8080"
     environment:
-      - KAFKA_CLUSTERS_0_NAME=forex-events-kafka-oauth-cluster
-      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:9092    # no localhost
-      - KAFKA_CLUSTERS_0_ZOOKEEPER=zookeeper:2181       # removed accidental leading space
-      - KAFKA_CLUSTERS_0_READONLY=false
+      - KAFKA_CLUSTERS_0_NAME=keycloak-cluster
+      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka-keycloak:9093
+      - KAFKA_CLUSTERS_1_NAME=google-cluster
+      - KAFKA_CLUSTERS_1_BOOTSTRAPSERVERS=kafka-google:9094
+      - KAFKA_CLUSTERS_2_NAME=github-cluster
+      - KAFKA_CLUSTERS_2_BOOTSTRAPSERVERS=kafka-github:9095
+      - KAFKA_CLUSTERS_3_NAME=microsoft-cluster
+      - KAFKA_CLUSTERS_3_BOOTSTRAPSERVERS=kafka-microsoft:9096
     networks:
       - forex-net
 
+  # ======================================================
+  # 🪄 Kafka Setup — Creates Provider Topics Automatically
+  # ======================================================
   kafka-setup:
     image: confluentinc/cp-kafka:7.6.0
-    container_name: forex-events-kafka-oauth-setup
+    container_name: kafka-setup
     depends_on:
-      kafka:
+      kafka-keycloak:
+        condition: service_healthy
+      kafka-google:
+        condition: service_healthy
+      kafka-github:
+        condition: service_healthy
+      kafka-microsoft:
         condition: service_healthy
     volumes:
       - ./scripts/create-topics.sh:/tmp/create-topics.sh
-    entrypoint: [ "bash", "/tmp/create-topics.sh" ]
+    entrypoint: ["bash", "/tmp/create-topics.sh"]
     networks:
       - forex-net
 
   # ======================================================
-  # Keycloak
+  # 🔑 Keycloak
   # ======================================================
   keycloak:
     image: quay.io/keycloak/keycloak:25.0.2
-    container_name: forex-events-kafka-oauth-keycloak
-    command:
-      - start-dev
+    container_name: keycloak
+    command: ["start-dev"]
     environment:
       KC_DB: dev-mem
       KC_HTTP_PORT: 8081
@@ -124,18 +192,13 @@ services:
       - "8081:8081"
     networks:
       - forex-net
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8081/ || exit 1"]
-      interval: 15s
-      timeout: 5s
-      retries: 5
 
   # ======================================================
-  # Prometheus
+  # 📈 Prometheus
   # ======================================================
   prometheus:
     image: prom/prometheus:v2.53.0
-    container_name: forex-events-kafka-oauth-prometheus
+    container_name: prometheus
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
     ports:
@@ -148,26 +211,11 @@ services:
       - --web.enable-lifecycle
 
   # ======================================================
-  # Jaeger (Tracing)
-  # ======================================================
-  jaeger:
-    image: jaegertracing/all-in-one:1.57
-    container_name: forex-events-kafka-oauth-jaeger
-    environment:
-      COLLECTOR_OTLP_ENABLED: "true"
-    ports:
-      - "16686:16686"   # UI
-      - "4317:4317"     # OTLP gRPC
-      - "4318:4318"     # OTLP HTTP
-    networks:
-      - forex-net
-
-  # ======================================================
-  # Grafana
+  # 📊 Grafana
   # ======================================================
   grafana:
     image: grafana/grafana:11.1.0
-    container_name: forex-events-kafka-oauth-grafana
+    container_name: grafana
     environment:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
@@ -180,12 +228,24 @@ services:
     networks:
       - forex-net
 
-# ======================================================
-# VOLUMES & NETWORKS
-# ======================================================
-volumes:
-  pgdata:
+  # ======================================================
+  # 🧭 Jaeger
+  # ======================================================
+  jaeger:
+    image: jaegertracing/all-in-one:1.57
+    container_name: jaeger
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+    ports:
+      - "16686:16686"   # UI
+      - "4317:4317"     # OTLP gRPC
+      - "4318:4318"     # OTLP HTTP
+    networks:
+      - forex-net
 
+# ======================================================
+# 🌐 Networks
+# ======================================================
 networks:
   forex-net:
     driver: bridge

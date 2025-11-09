@@ -43,6 +43,7 @@ forex:
       keycloak: oauth.keycloak.events
       google: oauth.google.events
       github: oauth.github.events
+      microsoft: oauth.microsoft.events
       audit: oauth.audit
       errors: oauth.errors
 
