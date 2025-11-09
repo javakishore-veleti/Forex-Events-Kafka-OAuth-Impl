@@ -23,8 +23,15 @@ spring:
         minimum-idle: 1
 
   kafka:
-    # 👇 Switches automatically between local and docker network hostnames
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:29092}
+    # Common Kafka defaults (these are shared across all providers)
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    consumer:
+      group-id: forex-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
 
 otel:
   service:
@@ -33,12 +40,20 @@ otel:
     otlp:
       endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://localhost:4318}
   logs:
-    exporter: none  # Jaeger doesn’t handle logs
+    exporter: none
   metrics:
-    exporter: none  # Prometheus scrapes directly
+    exporter: none
 
 forex:
   kafka:
+    # 👇 Provider-specific Kafka brokers (each points to a different cluster)
+    brokers:
+      keycloak: ${KAFKA_KEYCLOAK_BOOTSTRAP:localhost:9092}
+      google: ${KAFKA_GOOGLE_BOOTSTRAP:localhost:9093}
+      github: ${KAFKA_GITHUB_BOOTSTRAP:localhost:9094}
+      microsoft: ${KAFKA_MICROSOFT_BOOTSTRAP:localhost:9095}
+
+    # 👇 Provider-specific topic names
     topics:
       keycloak: oauth.keycloak.events
       google: oauth.google.events
@@ -46,6 +61,7 @@ forex:
       microsoft: oauth.microsoft.events
       audit: oauth.audit
       errors: oauth.errors
+
 
 feature:
   toggles:
@@ -59,9 +75,8 @@ feature:
           enabled: true
         microsoft:
           enabled: true
+
       consumers:
-        keycloak-oauth:
-          enabled: true
         oauth_provider:
           keycloak:
             enabled: true
@@ -71,6 +86,7 @@ feature:
             enabled: true
           microsoft:
             enabled: false
+
       producers:
         oauth_provider:
           keycloak:
