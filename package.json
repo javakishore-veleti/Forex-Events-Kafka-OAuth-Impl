@@ -1,0 +1,25 @@
+{
+  "name": "forex-events-kafka-oauth-impl",
+  "version": "1.0.0",
+  "description": "Task runner for build, run, docker, and deployment lifecycle of Forex Events Kafka OAuth Implementation.",
+  "scripts": {
+    "clean": "mvn clean",
+    "compile": "mvn compile",
+    "test": "mvn test",
+    "build": "mvn package -DskipTests",
+    "run:local": "SPRING_PROFILES_ACTIVE=local java -jar target/forex-events-kafka-oauth-impl-1.0.0.jar",
+    "start:compose": "docker-compose -f devops/docker-compose.local.yml up --build",
+    "stop:compose": "docker-compose -f devops/docker-compose.local.yml down",
+    "publish:image": "mvn compile jib:build -DskipTests -Djib.skip=false",
+    "publish:helm": "helm package devops/helm/kishore-veleti-forex-oauth-kafka && helm repo index .",
+    "deploy:stg": "helm upgrade --install forex-oauth kishore-veleti/kishore-veleti-forex-oauth-kafka -f devops/helm/kishore-veleti-forex-oauth-kafka/values-stg.yaml --namespace stg --create-namespace",
+    "deploy:prod": "helm upgrade --install forex-oauth kishore-veleti/kishore-veleti-forex-oauth-kafka -f devops/helm/kishore-veleti-forex-oauth-kafka/values-prod.yaml --namespace prod --create-namespace",
+    "publish:trades": "curl -X POST http://localhost:8080/api/forex/publish",
+    "smoketest": "curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/actuator/health | grep 200 && echo '✅ Health OK' || echo '❌ Health check failed'",
+    "logs": "docker logs -f forex-oauth-app"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "Apache-2.0"
+}
