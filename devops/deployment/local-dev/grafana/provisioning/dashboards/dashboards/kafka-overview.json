@@ -11,37 +11,76 @@
       "title": "Kafka Brokers Online",
       "datasource": "Prometheus",
       "targets": [
-        { "expr": "count(kafka_server_broker_topic_metrics_messages_in_total)", "refId": "A" }
+        {
+          "expr": "count(kafka_server_broker_topic_metrics_messages_in_total)",
+          "refId": "A"
+        }
       ],
-      "gridPos": { "x": 0, "y": 0, "w": 6, "h": 3 }
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 6,
+        "h": 3
+      }
     },
     {
       "type": "graph",
       "title": "Messages In per Topic",
       "datasource": "Prometheus",
       "targets": [
-        { "expr": "rate(kafka_server_broker_topic_metrics_messages_in_total[1m])", "legendFormat": "{{topic}}", "refId": "A" }
+        {
+          "expr": "rate(kafka_server_broker_topic_metrics_messages_in_total[1m])",
+          "legendFormat": "{{topic}}",
+          "refId": "A"
+        }
       ],
-      "gridPos": { "x": 0, "y": 3, "w": 12, "h": 6 }
+      "gridPos": {
+        "x": 0,
+        "y": 3,
+        "w": 12,
+        "h": 6
+      }
     },
     {
       "type": "graph",
       "title": "Bytes In / Bytes Out",
       "datasource": "Prometheus",
       "targets": [
-        { "expr": "rate(kafka_server_broker_topic_metrics_bytes_in_total[1m])", "legendFormat": "Bytes In", "refId": "A" },
-        { "expr": "rate(kafka_server_broker_topic_metrics_bytes_out_total[1m])", "legendFormat": "Bytes Out", "refId": "B" }
+        {
+          "expr": "rate(kafka_server_broker_topic_metrics_bytes_in_total[1m])",
+          "legendFormat": "Bytes In",
+          "refId": "A"
+        },
+        {
+          "expr": "rate(kafka_server_broker_topic_metrics_bytes_out_total[1m])",
+          "legendFormat": "Bytes Out",
+          "refId": "B"
+        }
       ],
-      "gridPos": { "x": 12, "y": 3, "w": 12, "h": 6 }
+      "gridPos": {
+        "x": 12,
+        "y": 3,
+        "w": 12,
+        "h": 6
+      }
     },
     {
       "type": "graph",
       "title": "Consumer Lag",
       "datasource": "Prometheus",
       "targets": [
-        { "expr": "kafka_consumergroup_lag", "legendFormat": "{{consumergroup}}", "refId": "A" }
+        {
+          "expr": "kafka_consumergroup_lag",
+          "legendFormat": "{{consumergroup}}",
+          "refId": "A"
+        }
       ],
-      "gridPos": { "x": 0, "y": 9, "w": 24, "h": 6 }
+      "gridPos": {
+        "x": 0,
+        "y": 9,
+        "w": 24,
+        "h": 6
+      }
     }
   ]
 }

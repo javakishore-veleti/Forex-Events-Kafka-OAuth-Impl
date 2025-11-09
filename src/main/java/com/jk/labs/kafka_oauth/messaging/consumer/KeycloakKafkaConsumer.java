@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
-@ConditionalOnExpression("${feature.toggles.kafka.oauth_provider.keycloak.enabled:true} && ${feature.toggles.kafka.consumers.oauth_provider.keycloak.enabled:true}")
+@ConditionalOnExpression("${feature.toggles.kafka.oauth_provider.keycloak.enabled:false} && ${feature.toggles.kafka.consumers.oauth_provider.keycloak.enabled:false}")
 public class KeycloakKafkaConsumer extends BaseKafkaConsumer {
 
     @Override

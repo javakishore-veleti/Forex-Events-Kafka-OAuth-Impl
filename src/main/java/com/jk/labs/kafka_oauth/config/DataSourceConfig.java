@@ -1,25 +1,27 @@
 package com.jk.labs.kafka_oauth.config;
 
 import com.zaxxer.hikari.HikariDataSource;
-import io.opentelemetry.api.OpenTelemetry;
 import jakarta.annotation.PostConstruct;
+import jakarta.persistence.EntityManagerFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.core.env.Environment;
-import org.springframework.transaction.annotation.EnableTransactionManagement;
-import jakarta.persistence.EntityManagerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.jdbc.DataSourceBuilder;
-import org.springframework.context.annotation.*;
-import org.springframework.orm.jpa.*;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
+import org.springframework.core.env.Environment;
+import org.springframework.orm.jpa.JpaTransactionManager;
+import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import javax.sql.DataSource;
 import java.util.HashMap;
 
+@SuppressWarnings("SpringJavaAutowiredFieldsWarningInspection")
 @Slf4j
 @Configuration
 @EnableTransactionManagement
@@ -30,8 +32,8 @@ public class DataSourceConfig {
 
     @PostConstruct
     public void logDatasourceUrls() {
-        log.info(">>> DataSourceConfig spring.datasource.pg.url = " + env.getProperty("spring.datasource.pg.url"));
-        log.info(">>> DataSourceConfig spring.datasource.h2.url = " + env.getProperty("spring.datasource.h2.url"));
+        log.info(">>> DataSourceConfig spring.datasource.pg.url = {}",  env.getProperty("spring.datasource.pg.url"));
+        log.info(">>> DataSourceConfig spring.datasource.h2.url = {}} " , env.getProperty("spring.datasource.h2.url"));
     }
 
     /* --------------------------- PostgreSQL --------------------------- */

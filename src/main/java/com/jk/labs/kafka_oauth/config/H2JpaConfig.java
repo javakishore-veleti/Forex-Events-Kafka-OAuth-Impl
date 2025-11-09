@@ -9,4 +9,5 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
         entityManagerFactoryRef = "h2EntityManagerFactory",
         transactionManagerRef = "h2TransactionManager"
 )
-class H2JpaConfig { }
+class H2JpaConfig {
+}

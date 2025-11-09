@@ -1,3 +1,4 @@
+#file: noinspection SpringBootApplicationYaml,SpellCheckingInspection
 spring:
   datasource:
     pg:
@@ -48,10 +49,10 @@ forex:
   kafka:
     # 👇 Provider-specific Kafka brokers (each points to a different cluster)
     brokers:
-      keycloak: ${KAFKA_KEYCLOAK_BOOTSTRAP:localhost:9092}
-      google: ${KAFKA_GOOGLE_BOOTSTRAP:localhost:9093}
-      github: ${KAFKA_GITHUB_BOOTSTRAP:localhost:9094}
-      microsoft: ${KAFKA_MICROSOFT_BOOTSTRAP:localhost:9095}
+      keycloak: ${KAFKA_KEYCLOAK_BOOTSTRAP:localhost:9093}
+      google: ${KAFKA_GOOGLE_BOOTSTRAP:localhost:9094}
+      github: ${KAFKA_GITHUB_BOOTSTRAP:localhost:9095}
+      microsoft: ${KAFKA_MICROSOFT_BOOTSTRAP:localhost:9096}
 
     # 👇 Provider-specific topic names
     topics:
@@ -72,9 +73,9 @@ feature:
         google:
           enabled: false
         github:
-          enabled: true
+          enabled: false
         microsoft:
-          enabled: true
+          enabled: false
 
       consumers:
         oauth_provider:
@@ -83,7 +84,7 @@ feature:
           google:
             enabled: false
           github:
-            enabled: true
+            enabled: false
           microsoft:
             enabled: false
 
@@ -94,9 +95,9 @@ feature:
           google:
             enabled: false
           github:
-            enabled: true
+            enabled: false
           microsoft:
-            enabled: true
+            enabled: false
 
 management:
   tracing:

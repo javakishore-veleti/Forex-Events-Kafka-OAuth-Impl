@@ -1,7 +1,10 @@
 package com.jk.labs.kafka_oauth.model.h2;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @SuppressWarnings("JpaDataSourceORMInspection")
 @Entity

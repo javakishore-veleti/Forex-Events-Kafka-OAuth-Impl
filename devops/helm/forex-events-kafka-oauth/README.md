@@ -5,19 +5,22 @@ Deploys the **Forex Events Kafka OAuth** Spring Boot microservice with Kafka, OA
 ## 🧩 Installation
 
 ### Local / Dev
+
 ```bash
 helm upgrade --install forex-events-kafka-oauth devops/helm/forex-events-kafka-oauth \
   -f values-dev.yaml -n dev --create-namespace
 
 ```
+
 ### Staging
+
 ```bash
 helm upgrade --install forex-events-kafka-oauth devops/helm/forex-events-kafka-oauth \
   -f values-stg.yaml -n stg --create-namespace
 ```
 
-
 ### Production
+
 ```bash
 helm upgrade --install forex-events-kafka-oauth devops/helm/forex-events-kafka-oauth \
   -f values-prod.yaml -n prod --create-namespace
@@ -34,11 +37,11 @@ kubectl get pods -n dev
 
 ## Summary
 
-| Component | Final Value |
-|------------|--------------|
-| **Helm Chart Name** | `forex-events-kafka-oauth` |
-| **Docker Image Name** | `docker.io/forex-events-kafka-oauth` |
-| **Service Name (K8s)** | `forex-events-kafka-oauth-svc` |
-| **ConfigMap** | `forex-events-kafka-oauth-config` |
-| **OTEL Service Name (env)** | `forex-events-kafka-oauth-<env>` |
+| Component                   | Final Value                          |
+|-----------------------------|--------------------------------------|
+| **Helm Chart Name**         | `forex-events-kafka-oauth`           |
+| **Docker Image Name**       | `docker.io/forex-events-kafka-oauth` |
+| **Service Name (K8s)**      | `forex-events-kafka-oauth-svc`       |
+| **ConfigMap**               | `forex-events-kafka-oauth-config`    |
+| **OTEL Service Name (env)** | `forex-events-kafka-oauth-<env>`     |
 

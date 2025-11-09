@@ -12,36 +12,70 @@
       "title": "Uptime (seconds)",
       "datasource": "Prometheus",
       "targets": [
-        { "expr": "process_uptime_seconds", "refId": "A" }
+        {
+          "expr": "process_uptime_seconds",
+          "refId": "A"
+        }
       ],
-      "gridPos": { "x": 0, "y": 0, "w": 6, "h": 3 }
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 6,
+        "h": 3
+      }
     },
     {
       "type": "graph",
       "title": "HTTP Request Count",
       "datasource": "Prometheus",
       "targets": [
-        { "expr": "rate(http_server_requests_seconds_count[1m])", "legendFormat": "{{uri}}", "refId": "A" }
+        {
+          "expr": "rate(http_server_requests_seconds_count[1m])",
+          "legendFormat": "{{uri}}",
+          "refId": "A"
+        }
       ],
-      "gridPos": { "x": 0, "y": 3, "w": 12, "h": 6 }
+      "gridPos": {
+        "x": 0,
+        "y": 3,
+        "w": 12,
+        "h": 6
+      }
     },
     {
       "type": "graph",
       "title": "HTTP Request Duration (avg)",
       "datasource": "Prometheus",
       "targets": [
-        { "expr": "rate(http_server_requests_seconds_sum[1m]) / rate(http_server_requests_seconds_count[1m])", "legendFormat": "{{uri}}", "refId": "A" }
+        {
+          "expr": "rate(http_server_requests_seconds_sum[1m]) / rate(http_server_requests_seconds_count[1m])",
+          "legendFormat": "{{uri}}",
+          "refId": "A"
+        }
       ],
-      "gridPos": { "x": 12, "y": 3, "w": 12, "h": 6 }
+      "gridPos": {
+        "x": 12,
+        "y": 3,
+        "w": 12,
+        "h": 6
+      }
     },
     {
       "type": "stat",
       "title": "Active Threads",
       "datasource": "Prometheus",
       "targets": [
-        { "expr": "jvm_threads_live_threads", "refId": "A" }
+        {
+          "expr": "jvm_threads_live_threads",
+          "refId": "A"
+        }
       ],
-      "gridPos": { "x": 6, "y": 0, "w": 6, "h": 3 }
+      "gridPos": {
+        "x": 6,
+        "y": 0,
+        "w": 6,
+        "h": 3
+      }
     }
   ]
 }

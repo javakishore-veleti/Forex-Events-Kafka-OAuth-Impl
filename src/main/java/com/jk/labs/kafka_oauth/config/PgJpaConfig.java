@@ -9,4 +9,5 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
         entityManagerFactoryRef = "pgEntityManagerFactory",
         transactionManagerRef = "pgTransactionManager"
 )
-class PgJpaConfig { }
+class PgJpaConfig {
+}

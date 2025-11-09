@@ -22,19 +22,20 @@
 
 ## Tech Stack
 
-| Category | Tools |
-|-----------|-------|
-| **Core** | Java 17, Spring Boot 3, Lombok, SLF4J |
-| **Streaming** | Apache Kafka (multi-broker) |
-| **Security** | SASL/OAUTHBEARER with OAuth2/OIDC |
-| **Data** | H2 + PostgreSQL (multi-datasource) |
-| **Metrics** | OpenTelemetry, Micrometer, Prometheus |
-| **Tracing** | Jaeger |
-| **Visualization** | Grafana (auto-provisioned dashboard) |
-| **CI/CD** | GitHub Actions, Helm, Docker |
-| **Containerization** | Docker, Compose, Kubernetes |
+| Category             | Tools                                 |
+|----------------------|---------------------------------------|
+| **Core**             | Java 17, Spring Boot 3, Lombok, SLF4J |
+| **Streaming**        | Apache Kafka (multi-broker)           |
+| **Security**         | SASL/OAUTHBEARER with OAuth2/OIDC     |
+| **Data**             | H2 + PostgreSQL (multi-datasource)    |
+| **Metrics**          | OpenTelemetry, Micrometer, Prometheus |
+| **Tracing**          | Jaeger                                |
+| **Visualization**    | Grafana (auto-provisioned dashboard)  |
+| **CI/CD**            | GitHub Actions, Helm, Docker          |
+| **Containerization** | Docker, Compose, Kubernetes           |
 
 ## Repository Structure
+
 ```text
 Forex-Events-Kafka-OAuth-Impl/
 ├── src/main/java/com/jk/labs/kafka_oauth/
@@ -88,15 +89,18 @@ This spins up:
 - Prometheus, Grafana, Jaeger
 
 ```
+
 ## Publish Random Forex Trades
 
-Publishes 10 random Forex trades by default. Each enabled provider consumes from its topic and stores data (H2/Postgres).
+Publishes 10 random Forex trades by default. Each enabled provider consumes from its topic and stores data (
+H2/Postgres).
 
 ```shell
 
 curl -X POST "http://localhost:8080/api/forex/publish"
 
 ```
+
 ## Feature Toggles
 
 In application.yml or Helm values. Only toggled-on providers connect to brokers and authenticate.
@@ -109,6 +113,7 @@ features:
   azure.enabled: true
 
 ```
+
 ## Deploy to Kubernetes
 
 Add the Helm repo:
@@ -131,7 +136,7 @@ helm install forex-oauth kishore-veleti/kishore-veleti-forex-oauth-kafka -f devo
 ## Observability Stack
 
 | Component      | URL                                              | Purpose                     |
-| -------------- | ------------------------------------------------ | --------------------------- |
+|----------------|--------------------------------------------------|-----------------------------|
 | Grafana        | [http://localhost:3000](http://localhost:3000)   | Auto-provisioned dashboards |
 | Prometheus     | [http://localhost:9090](http://localhost:9090)   | Metric scraping             |
 | Jaeger         | [http://localhost:16686](http://localhost:16686) | Distributed traces          |
@@ -151,20 +156,22 @@ forex_consume_latency_seconds_sum{provider="keycloak"} 1.23
 ```
 
 ## GitHub Actions CI/CD
-| Workflow               | Description                            |
-| ---------------------- | -------------------------------------- |
+
+| Workflow            | Description                            |
+|---------------------|----------------------------------------|
 | **Build Docker**    | Builds & pushes all images             |
 | **Release Helm**    | Packages and publishes chart           |
 | **Deploy K8s**      | Deploys to staging / production        |
 | **Smoke Test**      | API + metrics validation               |
-| **Rollback**         | Auto rollback on failure               |
+| **Rollback**        | Auto rollback on failure               |
 | **Version Release** | Semantic tagging & releases            |
 | **Release Drafter** | Auto-generated changelog               |
 | **PR Labeler**      | Auto-labels PRs for changelog grouping |
 
 ## Environments & Secrets
+
 | Env          | Secrets                                                              | Purpose                   |
-| ------------ | -------------------------------------------------------------------- | ------------------------- |
+|--------------|----------------------------------------------------------------------|---------------------------|
 | `staging`    | `KUBECONFIG_CONTENTS`, `SLACK_WEBHOOK_URL`                           | Auto-deploy after release |
 | `production` | `KUBECONFIG_CONTENTS`, `SLACK_WEBHOOK_URL`, `GRAFANA_ADMIN_PASSWORD` | Manual approval required  |
 
@@ -212,6 +219,7 @@ docker.io/kishore-veleti-kafka:latest
 ```
 
 ## Goals
+
 - Reference implementation of OAuth-secured Kafka-
 - Demonstrate OTEL metrics for publish & consume paths
 - Show multi-broker Kafka + feature toggles
@@ -220,9 +228,10 @@ docker.io/kishore-veleti-kafka:latest
 ## Next Step
 
 Once you push this to your repo:
-1. GitHub will automatically render the badges  
-2. Release Drafter and Labeler will start working  
-3. CI/CD pipelines will build and tag images  
+
+1. GitHub will automatically render the badges
+2. Release Drafter and Labeler will start working
+3. CI/CD pipelines will build and tag images
 4. Helm chart can be accessed from:  
    `https://javakishore-veleti.github.io/Forex-Events-Kafka-OAuth-Impl/`
 

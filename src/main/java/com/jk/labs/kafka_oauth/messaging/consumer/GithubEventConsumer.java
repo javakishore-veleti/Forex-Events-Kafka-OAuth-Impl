@@ -7,14 +7,14 @@ import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
-@ConditionalOnExpression("${feature.toggles.kafka.oauth_provider.google.enabled:false} && ${feature.toggles.kafka.consumers.oauth_provider.google.enabled:false}")
-public class GoogleEventConsumer {
+@ConditionalOnExpression("${feature.toggles.kafka.oauth_provider.github.enabled:false} && ${feature.toggles.kafka.consumers.oauth_provider.github.enabled:false}")
+public class GithubEventConsumer {
 
     @KafkaListener(
-            topics = "oauth.google.events",
-            containerFactory = "googleKafkaListenerFactory"
+            topics = "oauth.github.events",
+            containerFactory = "githubKafkaListenerFactory"
     )
     public void listen(String message) {
-        log.info("Received Google event: " + message);
+        log.info("Received Github event: " + message);
     }
 }
