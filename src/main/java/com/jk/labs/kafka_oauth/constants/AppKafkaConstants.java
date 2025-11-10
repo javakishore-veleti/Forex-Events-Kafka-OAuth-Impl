@@ -17,6 +17,7 @@ public class AppKafkaConstants {
     // "okta", "azuread",
     // Default Kafka topic names for each provider
     public static final List<String> KAFKA_TOPIC_NAMES = List.of(
+            "forex-kafkaDefault-topic",
             "forex-keycloak-topic",
             "forex-google-topic",
             "forex-github-topic",
@@ -25,6 +26,7 @@ public class AppKafkaConstants {
 
     // Mapping of provider → topic name
     public static final Map<String, String> KAFKA_TOPIC_MAP = Map.of(
+            "kafka-default", "forex-kafka-default-topic",
             "keycloak", "forex-keycloak-topic",
             "google", "forex-google-topic",
             "github", "forex-github-topic",

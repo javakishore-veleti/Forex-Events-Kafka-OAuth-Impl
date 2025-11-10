@@ -50,6 +50,7 @@ forex:
   kafka:
     # Provider-specific Kafka brokers (each points to a different cluster)
     brokers:
+      kafka-default: ${KAFKA_DEFAULT_BOOTSTRAP:localhost:9092}
       keycloak: ${KAFKA_KEYCLOAK_BOOTSTRAP:localhost:9093}
       google: ${KAFKA_GOOGLE_BOOTSTRAP:localhost:9094}
       github: ${KAFKA_GITHUB_BOOTSTRAP:localhost:9095}
@@ -57,6 +58,7 @@ forex:
 
     # 👇 Provider-specific topic names
     topics:
+      kafka-default: oauth.kafka-default.events
       keycloak: oauth.keycloak.events
       google: oauth.google.events
       github: oauth.github.events
@@ -64,6 +66,7 @@ forex:
       audit: oauth.audit
       errors: oauth.errors
     oauth:
+      # No OAuth for kafka-default i.e. no SASL/OAUTHBEARER configured
       keycloak:
         token-endpoint: http://localhost:8081/realms/forex/protocol/openid-connect/token
         client-id: forex-keycloak-client
@@ -77,17 +80,19 @@ forex:
         client-id: forex-github-client
         client-secret: forex-secret
       microsoft:
-        token-endpoint: https://login.microsoftonline.com/common/oauth2/v2.0/token
-        client-id: forex-microsoft-client
-        client-secret: forex-secret
-
+        # These values come from uour Laptop envrionment variables - Microsoft Entra ID (Azure AD) OAuth configuration
+        token-endpoint: https://login.microsoftonline.com/${KAFKA_OAUTHBEARER_IMPL_TENANT_ID:UN_DEFINED_OAUTHBEARER_IMPL_TENANT_ID}/oauth2/v2.0/token
+        client-id: ${KAFKA_OAUTHBEARER_IMPL_CLIENT_ID:forex-microsoft-client}
+        client-secret: ${KAFKA_OAUTHBEARER_IMPL_CLIENT_SECRET:forex-secret}
 
 feature:
   toggles:
     kafka:
       oauth_provider:
+        kafka-default:
+          enabled: false
         keycloak:
-          enabled: true
+          enabled: false
         google:
           enabled: false
         github:
@@ -97,8 +102,10 @@ feature:
 
       consumers:
         oauth_provider:
-          keycloak:
+          kafka-default:
             enabled: true
+          keycloak:
+            enabled: false
           google:
             enabled: false
           github:
@@ -108,8 +115,10 @@ feature:
 
       producers:
         oauth_provider:
-          keycloak:
+          kafka-default:
             enabled: true
+          keycloak:
+            enabled: false
           google:
             enabled: false
           github:

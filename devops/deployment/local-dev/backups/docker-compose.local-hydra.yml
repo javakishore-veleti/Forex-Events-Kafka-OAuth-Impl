@@ -1,0 +1,409 @@
+services:
+  # ======================================================
+  # ZooKeeper
+  # ======================================================
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.0
+    container_name: forex-events-kafka-oauth-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+      # 👇 Enable "ruok" for health probes
+      KAFKA_OPTS: "-Dzookeeper.4lw.commands.whitelist=ruok"
+    ports:
+      - "2181:2181"
+    networks:
+      - forex-net
+    healthcheck:
+      test: [ "CMD", "bash", "-c", "echo ruok | nc 127.0.0.1 2181 | grep imok || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # ======================================================
+  # Kafka Brokers (one per OAuth provider)
+  # ======================================================
+
+  kafka-ordy-hydra:
+    image: confluentinc/cp-kafka:7.6.0
+    container_name: forex-events-kafka-oauth-kafka-ordy-hydra
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+      ordy-hydra:
+        condition: service_healthy  # Make sure this says service_healthy
+    ports:
+      - "9093:9093"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+
+      # UPDATED: OAuth Configuration
+      KAFKA_LISTENERS: INTERNAL://:29093,EXTERNAL://:9093
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka-ordy-hydra:29093,EXTERNAL://localhost:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:SASL_PLAINTEXT,EXTERNAL:SASL_PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_SASL_ENABLED_MECHANISMS: OAUTHBEARER
+      KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: OAUTHBEARER
+
+      # NEW: OAuth Bearer Configuration
+      KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/jaas.conf
+
+      # OAuth Token Endpoint
+      KAFKA_OAUTH_TOKEN_ENDPOINT_URI: http://ordy-hydra:4444/oauth2/token
+      KAFKA_OAUTH_CLIENT_ID: kafka-broker
+      KAFKA_OAUTH_CLIENT_SECRET: kafka-secret
+      KAFKA_OAUTH_SCOPE: openid
+      KAFKA_OAUTH_EXTENSIONS: grant_type=client_credentials
+
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    volumes:
+      # NEW: Mount JAAS config
+      - ./kafka-jaas.conf:/etc/kafka/jaas.conf
+    healthcheck:
+      test: [ "CMD", "bash", "-c", "nc -z localhost 9093" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - forex-net
+
+  kafka-google:
+    image: confluentinc/cp-kafka:7.6.0
+    container_name: forex-events-kafka-oauth-google
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    ports:
+      - "9094:9094"
+    environment:
+      KAFKA_BROKER_ID: 2
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: INTERNAL://:29094,EXTERNAL://:9094
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka-google:29094,EXTERNAL://localhost:9094
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      # OAuth2 Token endpoint (Google)
+      KAFKA_OAUTH_TOKEN_ENDPOINT_URI: https://oauth2.googleapis.com/token
+    healthcheck:
+      test: [ "CMD", "bash", "-c", "nc -z localhost 9094" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - forex-net
+
+  kafka-github:
+    image: confluentinc/cp-kafka:7.6.0
+    container_name: forex-events-kafka-oauth-github
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    ports:
+      - "9095:9095"
+    environment:
+      KAFKA_BROKER_ID: 3
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: INTERNAL://:29095,EXTERNAL://:9095
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka-github:29095,EXTERNAL://localhost:9095
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      # OAuth2 Token endpoint (GitHub)
+      KAFKA_OAUTH_TOKEN_ENDPOINT_URI: https://github.com/login/oauth/access_token
+    healthcheck:
+      test: [ "CMD", "bash", "-c", "nc -z localhost 9095" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - forex-net
+
+  kafka-microsoft:
+    image: confluentinc/cp-kafka:7.6.0
+    container_name: forex-events-kafka-oauth-microsoft
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    ports:
+      - "9096:9096"
+    environment:
+      KAFKA_BROKER_ID: 4
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: INTERNAL://:29096,EXTERNAL://:9096
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka-microsoft:29096,EXTERNAL://localhost:9096
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      # OAuth2 Token endpoint (Microsoft)
+      KAFKA_OAUTH_TOKEN_ENDPOINT_URI: https://login.microsoftonline.com/common/oauth2/v2.0/token
+    healthcheck:
+      test: [ "CMD", "bash", "-c", "nc -z localhost 9096" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - forex-net
+
+  # ======================================================
+  # Kafka UI (single pane for all clusters)
+  # ======================================================
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: forex-events-kafka-oauth-ui
+    depends_on:
+      - kafka-ordy-hydra
+      - kafka-google
+      - kafka-github
+      - kafka-microsoft
+    ports:
+      - "8085:8080"
+    environment:
+      - KAFKA_CLUSTERS_0_NAME=hydra-cluster
+      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka-ordy-hydra:29093
+      - KAFKA_CLUSTERS_1_NAME=google-cluster
+      - KAFKA_CLUSTERS_1_BOOTSTRAPSERVERS=kafka-google:29094
+      - KAFKA_CLUSTERS_2_NAME=github-cluster
+      - KAFKA_CLUSTERS_2_BOOTSTRAPSERVERS=kafka-github:29095
+      - KAFKA_CLUSTERS_3_NAME=microsoft-cluster
+      - KAFKA_CLUSTERS_3_BOOTSTRAPSERVERS=kafka-microsoft:29096
+    networks:
+      - forex-net
+
+  # ======================================================
+  # Kafka Setup — Creates Provider Topics Automatically
+  # ======================================================
+  kafka-setup:
+    image: confluentinc/cp-kafka:7.6.0
+    container_name: forex-events-kafka-oauth-setup
+    depends_on:
+      kafka-ordy-hydra:
+        condition: service_healthy
+      kafka-google:
+        condition: service_healthy
+      kafka-github:
+        condition: service_healthy
+      kafka-microsoft:
+        condition: service_healthy
+    volumes:
+      - ./scripts/create-topics.sh:/tmp/create-topics.sh
+    entrypoint: [ "bash", "/tmp/create-topics.sh" ]
+    networks:
+      - forex-net
+
+  # ======================================================
+  # Ory Hydra - OAuth2 Server
+  # ======================================================
+  ordy-hydra:
+    platform: linux/arm64
+    container_name: forex-events-kafka-oauth-ordy-hydra
+    image: oryd/hydra:v2.2.0
+    command: serve all --dev
+    environment:
+      DSN: memory
+      URLS_SELF_ISSUER: http://localhost:4444
+
+      # NEW: Configure Hydra to use Kratos for login/consent
+      URLS_LOGIN: http://localhost:4455/login
+      URLS_CONSENT: http://localhost:4455/consent
+      URLS_LOGOUT: http://localhost:4455/logout
+
+      # OAuth2 configuration
+      SECRETS_SYSTEM: youReallyNeedToChangeThis
+      OIDC_SUBJECT_IDENTIFIERS_SUPPORTED_TYPES: public,pairwise
+      OIDC_SUBJECT_IDENTIFIERS_PAIRWISE_SALT: youReallyNeedToChangeThis
+
+      # CORS for development
+      SERVE_PUBLIC_CORS_ENABLED: "true"
+      SERVE_PUBLIC_CORS_ALLOWED_ORIGINS: http://localhost:4455,http://localhost:8085
+    ports:
+      - "4444:4444" # Public
+      - "4445:4445" # Admin
+    # ADD THIS HEALTHCHECK TO HYDRA:
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:4444/health/ready" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - forex-net
+
+  oryd-kratos:
+    platform: linux/arm64
+    container_name: forex-events-kafka-oauth-ordy-kratos
+    image: oryd/kratos:v1.0.0
+    command:
+      - serve
+      - --dev
+      - --watch-courier
+    environment:
+      DSN: memory
+      LOG_LEVEL: debug
+
+      # Required configurations
+      SELFSERVICE_DEFAULT_BROWSER_RETURN_URL: http://localhost:4455/welcome
+      SELFSERVICE_FLOWS_ERROR_UI_URL: http://localhost:4455/error
+      SELFSERVICE_FLOWS_SETTINGS_UI_URL: http://localhost:4455/settings
+      SELFSERVICE_FLOWS_LOGIN_UI_URL: http://localhost:4455/login
+      SELFSERVICE_FLOWS_REGISTRATION_UI_URL: http://localhost:4455/registration
+      SELFSERVICE_FLOWS_RECOVERY_UI_URL: http://localhost:4455/recovery
+      SELFSERVICE_FLOWS_VERIFICATION_UI_URL: http://localhost:4455/verification
+      SELFSERVICE_FLOWS_LOGOUT_UI_URL: http://localhost:4455/logout
+
+      # FIXED: Proper JSON array syntax for identity schemas
+      IDENTITY_SCHEMAS: |-
+        [
+          {
+            "id": "default",
+            "url": "file:///etc/config/kratos/identity.schema.json"
+          }
+        ]
+
+      # Courier configuration
+      COURIER_SMTP_CONNECTION_URI: smtp://test:test@mailhog:1025/?skip_ssl_verify=true
+
+      # Security
+      SECRETS_COOKIE: youReallyNeedToChangeThisCookie1
+      SECRETS_CIPHER: youReallyNeedToChangeThisCipher1
+
+      # URLs
+      URLS_SELF_PUBLIC: http://localhost:4433
+      URLS_SELF_ADMIN: http://localhost:4434
+    ports:
+      - "4433:4433"
+      - "4434:4434"
+    # ADD HEALTHCHECK:
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:4433/health/ready" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    volumes:
+      - ./kratos-schema:/etc/config/kratos
+    networks:
+      - forex-net
+  # ======================================================
+  # Ory Kratos UI
+  # ======================================================
+  oryd-kratos-ui:
+    container_name: forex-events-kafka-oauth-ordy-kratos-ui
+    image: oryd/kratos-selfservice-ui-node:v1.0.0
+    environment:
+      KRATOS_PUBLIC_URL: http://oryd-kratos:4433
+      KRATOS_BROWSER_URL: http://localhost:4455
+      PORT: 4455
+    ports:
+      - "4455:4455"
+    depends_on:
+      - oryd-kratos
+    networks:
+      - forex-net
+
+  # NEW: Add this service to create OAuth clients automatically
+  hydra-setup:
+    image: curlimages/curl:latest
+    container_name: forex-events-kafka-oauth-hydra-setup
+    depends_on:
+      ordy-hydra:
+        condition: service_healthy
+    volumes:
+      - ./hydra-setup.sh:/hydra-setup.sh
+    entrypoint: [ "sh", "/hydra-setup.sh" ]
+    networks:
+      - forex-net
+
+  mailhog:
+    image: jcalonso/mailhog:latest # Use this ARM64 compatible image
+    platform: linux/arm64 # Force the use of the ARM64 platform
+    container_name: forex-events-kafka-oauth-mailhog
+    ports:
+      - "1025:1025" # SMTP server port
+      - "8025:8025" # Web UI port
+    networks:
+      - forex-net
+
+  # ======================================================
+  # Prometheus
+  # ======================================================
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    container_name: forex-events-kafka-oauth-prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - forex-net
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --web.enable-lifecycle
+
+  # ======================================================
+  # Grafana
+  # ======================================================
+  grafana:
+    image: grafana/grafana:11.1.0
+    container_name: forex-events-kafka-oauth-grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning
+    networks:
+      - forex-net
+
+  # ======================================================
+  # Jaeger
+  # ======================================================
+  jaeger:
+    image: jaegertracing/all-in-one:1.57
+    container_name: forex-events-kafka-oauth-jaeger
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+    ports:
+      - "16686:16686"   # UI
+      - "4317:4317"     # OTLP gRPC
+      - "4318:4318"     # OTLP HTTP
+    networks:
+      - forex-net
+
+  # ======================================================
+  # PostgreSQL (for Spring Boot)
+  # ======================================================
+  postgres:
+    image: postgres:16
+    container_name: forex-events-kafka-oauth-postgres
+    environment:
+      POSTGRES_USER: forex_user
+      POSTGRES_PASSWORD: forex_pass
+      POSTGRES_DB: forex_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U forex_user -d forex_db" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - forex-net
+
+volumes:
+  postgres_data:
+
+# ======================================================
+# Networks
+# ======================================================
+networks:
+  forex-net:
+    driver: bridge

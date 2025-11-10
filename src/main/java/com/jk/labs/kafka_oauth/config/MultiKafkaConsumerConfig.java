@@ -68,6 +68,12 @@ public class MultiKafkaConsumerConfig {
         return factory;
     }
 
+    @Bean(name = "kafkaDefaultKafkaListenerContainerFactory")
+    @ConditionalOnProperty(value = "feature.toggles.kafka.consumers.oauth_provider.kafka-default.enabled", havingValue = "true")
+    public ConcurrentKafkaListenerContainerFactory<String, TradeEventMessage> kafkaDefaultKafkaListenerContainerFactory() {
+        return listenerFactoryFor("kafka-default");
+    }
+
     @Bean(name = "keycloakKafkaListenerContainerFactory")
     @ConditionalOnProperty(value = "feature.toggles.kafka.consumers.oauth_provider.keycloak.enabled", havingValue = "true")
     public ConcurrentKafkaListenerContainerFactory<String, TradeEventMessage> keycloakKafkaListenerContainerFactory() {

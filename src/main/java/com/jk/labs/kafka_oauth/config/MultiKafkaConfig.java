@@ -106,6 +106,18 @@ public class MultiKafkaConfig {
     // Provider-specific ProducerFactories & KafkaTemplates
     // ---------------------------------------------------------------------
 
+    @Bean(name = "kafkaDefaultProducerFactory")
+    @ConditionalOnProperty(value = "feature.toggles.kafka.producers.oauth_provider.kafka-default.enabled", havingValue = "true")
+    public ProducerFactory<String, TradeEventMessage> kafkaDefaultProducerFactory() {
+        return producerFactoryFor("kafka-default");
+    }
+
+    @Bean(name = "kafkaDefaultKafkaTemplate")
+    @ConditionalOnProperty(value = "feature.toggles.kafka.producers.oauth_provider.kafka-default.enabled", havingValue = "true")
+    public KafkaTemplate<String, TradeEventMessage> kafkaDeraultKafkaTemplate() {
+        return new KafkaTemplate<>(kafkaDefaultProducerFactory());
+    }
+
     @Bean(name = "keycloakProducerFactory")
     @ConditionalOnProperty(value = "feature.toggles.kafka.producers.oauth_provider.keycloak.enabled", havingValue = "true")
     public ProducerFactory<String, TradeEventMessage> keycloakProducerFactory() {
