@@ -23,3 +23,15 @@
 hs_err_pid*
 replay_pid*
 /target/
+**/.idea/
+*.iml
+*.ipr
+*.iws
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*~.bak
+*.tmp
+*.orig
+*.rej
