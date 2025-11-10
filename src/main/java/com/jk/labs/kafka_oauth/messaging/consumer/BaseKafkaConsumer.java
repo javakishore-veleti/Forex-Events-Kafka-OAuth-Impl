@@ -10,7 +10,7 @@ import org.springframework.messaging.handler.annotation.Payload;
 public abstract class BaseKafkaConsumer {
 
     public BaseKafkaConsumer() {
-        log.info("Initializing BaseKafkaConsumer for topic: " + getTopicName());
+        log.info("Initializing BaseKafkaConsumer for topic: {}" , getTopicName());
     }
 
     @SuppressWarnings("unused")
@@ -29,12 +29,17 @@ public abstract class BaseKafkaConsumer {
     protected abstract void processMessage(TradeEventMessage message);
 
     // Each subclass will tell which listener container factory it needs
+    @SuppressWarnings({"unused", "MismatchedStringCase"})
     public String getListenerFactoryName() {
         String className = getClass().getSimpleName().toLowerCase();
+        log.info("ListenerFactoryName: {}" , className);
+        if (className.contains("kafkaDefault")) return "kafkaDefaultKafkaListenerContainerFactory";
         if (className.contains("keycloak")) return "keycloakKafkaListenerContainerFactory";
         if (className.contains("google")) return "googleKafkaListenerContainerFactory";
         if (className.contains("github")) return "githubKafkaListenerContainerFactory";
         if (className.contains("microsoft")) return "microsoftKafkaListenerContainerFactory";
-        return "keycloakKafkaListenerContainerFactory";
+
+        log.info("ListenerFactoryName: {} defaulting to kafkaDefaultKafkaListenerContainerFactory", className);
+        return "kafkaDefaultKafkaListenerContainerFactory";
     }
 }

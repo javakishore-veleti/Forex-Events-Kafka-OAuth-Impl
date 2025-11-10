@@ -50,7 +50,7 @@ forex:
   kafka:
     # Provider-specific Kafka brokers (each points to a different cluster)
     brokers:
-      kafka-default: ${KAFKA_DEFAULT_BOOTSTRAP:localhost:9092}
+      kafkaDefault: ${KAFKA_DEFAULT_BOOTSTRAP:localhost:9092}
       keycloak: ${KAFKA_KEYCLOAK_BOOTSTRAP:localhost:9093}
       google: ${KAFKA_GOOGLE_BOOTSTRAP:localhost:9094}
       github: ${KAFKA_GITHUB_BOOTSTRAP:localhost:9095}
@@ -58,7 +58,7 @@ forex:
 
     # 👇 Provider-specific topic names
     topics:
-      kafka-default: oauth.kafka-default.events
+      kafkaDefault: oauth.kafkaDefault.events
       keycloak: oauth.keycloak.events
       google: oauth.google.events
       github: oauth.github.events
@@ -66,7 +66,7 @@ forex:
       audit: oauth.audit
       errors: oauth.errors
     oauth:
-      # No OAuth for kafka-default i.e. no SASL/OAUTHBEARER configured
+      # No OAuth for kafkaDefault i.e. no SASL/OAUTHBEARER configured
       keycloak:
         token-endpoint: http://localhost:8081/realms/forex/protocol/openid-connect/token
         client-id: forex-keycloak-client
@@ -89,8 +89,8 @@ feature:
   toggles:
     kafka:
       oauth_provider:
-        kafka-default:
-          enabled: false
+        kafkaDefault:
+          enabled: true
         keycloak:
           enabled: false
         google:
@@ -102,7 +102,7 @@ feature:
 
       consumers:
         oauth_provider:
-          kafka-default:
+          kafkaDefault:
             enabled: true
           keycloak:
             enabled: false
@@ -115,7 +115,7 @@ feature:
 
       producers:
         oauth_provider:
-          kafka-default:
+          kafkaDefault:
             enabled: true
           keycloak:
             enabled: false

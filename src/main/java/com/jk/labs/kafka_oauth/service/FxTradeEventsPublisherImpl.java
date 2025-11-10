@@ -26,6 +26,7 @@ public class FxTradeEventsPublisherImpl implements FxTradeEventsPublisher {
 
     // bean names per provider
     private static final Map<String, String> TEMPLATE_BEAN_NAMES = Map.of(
+            "kafkaDefault", "kafkaDefaultKafkaTemplate",
             "keycloak", "keycloakKafkaTemplate",
             "google", "googleKafkaTemplate",
             "github", "githubKafkaTemplate",
@@ -42,7 +43,8 @@ public class FxTradeEventsPublisherImpl implements FxTradeEventsPublisher {
                 ? AppKafkaConstants.KAFKA_TOPIC_NAMES
                 : List.of(kafkaTopicsCsv.trim().toLowerCase(Locale.ROOT).split(","));
 
-        log.info("Publishing {} events for providers: {}", noOfEvents, providers);
+        List<String> providersPublished = new ArrayList<>();
+        List<String> providersFailed = new ArrayList<>();
 
         for (int i = 1; i <= noOfEvents; i++) {
             log.info("🚀 START FX Trade Event #{}", i);
@@ -68,10 +70,16 @@ public class FxTradeEventsPublisherImpl implements FxTradeEventsPublisher {
 
                     template.send(topic, tradeEventMessage);
                     log.info("Published to {} → {}", provider, topic);
+
+                    providersPublished.add(provider);
+
                 } catch (Exception ex) {
                     log.error("Error publishing for '{}': {}", provider, ex.getMessage(), ex);
+                    providersFailed.add(provider);
                 }
             }
+
+            log.info("Published {} events for providers: {} providersFailed {}", noOfEvents, providersPublished, providersFailed);
 
             log.info("COMPLETED FX Trade Event #{}", i);
         }
@@ -90,7 +98,7 @@ public class FxTradeEventsPublisherImpl implements FxTradeEventsPublisher {
             }
 
             if (!context.containsBean(beanName)) {
-                log.warn("KafkaTemplate bean '{}' not found in context (toggle may be off)", beanName);
+                log.debug("KafkaTemplate bean '{}' not found in context (toggle may be off)", beanName);
                 return null;
             }
 
@@ -112,7 +120,7 @@ public class FxTradeEventsPublisherImpl implements FxTradeEventsPublisher {
         return topicCache.computeIfAbsent(provider, p -> {
             for (String t : inputTopics) {
                 if (t.contains(p)) {
-                    log.info("Cached topic '{}' for provider '{}'", t, p);
+                    log.debug("Cached topic '{}' for provider '{}'", t, p);
                     return t;
                 }
             }

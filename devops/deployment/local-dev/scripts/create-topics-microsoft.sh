@@ -22,6 +22,7 @@ TOPICS=(
   "oauth.${PROVIDER}.events"
   "oauth.${PROVIDER}.audit"
   "oauth.${PROVIDER}.errors"
+  "forex-${PROVIDER}-topic"
 )
 
 for topic in "${TOPICS[@]}"; do

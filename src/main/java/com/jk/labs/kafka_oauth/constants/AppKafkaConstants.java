@@ -8,6 +8,7 @@ public class AppKafkaConstants {
     // "Auth0", "Okta", "AzureAD",
     // List of all supported auth providers
     public static final List<String> AUTH_PROVIDERS = List.of(
+            "kafkaDefault",
             "keycloak",
             "google",
             "github",
@@ -26,7 +27,7 @@ public class AppKafkaConstants {
 
     // Mapping of provider → topic name
     public static final Map<String, String> KAFKA_TOPIC_MAP = Map.of(
-            "kafka-default", "forex-kafka-default-topic",
+            "kafkaDefault", "forex-kafkaDefault-topic",
             "keycloak", "forex-keycloak-topic",
             "google", "forex-google-topic",
             "github", "forex-github-topic",

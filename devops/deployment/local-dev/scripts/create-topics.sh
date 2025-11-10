@@ -1,9 +1,28 @@
 #!/usr/bin/env bash
 set -e
 
-PROVIDER="microsoft"
-BROKER_HOST="kafka-microsoft"
+PROVIDER="kafkaDefault"
+BROKER_HOST="kafkaDefault"
 BROKER_PORT=9096
+
+# Override with command-line arguments if provided
+if [ $# -ge 1 ]; then
+  PROVIDER="$1"
+fi
+
+if [ $# -ge 2 ]; then
+  BROKER_HOST="$2"
+fi
+
+if [ $# -ge 3 ]; then
+  BROKER_PORT="$3"
+fi
+
+# Display final values
+echo "PROVIDER=$PROVIDER"
+echo "BROKER_HOST=$BROKER_HOST"
+echo "BROKER_PORT=$BROKER_PORT"
+
 
 echo "🔄 Waiting for ${PROVIDER^} Kafka broker (${BROKER_HOST}:${BROKER_PORT}) to be ready..."
 
@@ -21,7 +40,8 @@ echo "📦 Creating topics for ${PROVIDER^}..."
 TOPICS=(
   "oauth.${PROVIDER}.events"
   "oauth.${PROVIDER}.audit"
-  "oauth.${PROVIDER}.errors"
+  "oauth.${PROVIDER}.errors
+  "forex.${PROVIDER}.events"
 )
 
 for topic in "${TOPICS[@]}"; do

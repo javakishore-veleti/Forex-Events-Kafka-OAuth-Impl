@@ -20,14 +20,15 @@ services:
       timeout: 5s
       retries: 10
 
-  kafka-default:
+  kafkaDefault:
     image: confluentinc/cp-kafka:7.6.0
-    container_name: kafka-default
+    container_name: forex-events-kafka-oauth-kafkaDefault
+    hostname: kafkaDefault
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_LISTENERS: INTERNAL://:29092,EXTERNAL://:9092
-      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka-default:29092,EXTERNAL://localhost:9092
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafkaDefault:29092,EXTERNAL://localhost:9092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
@@ -41,10 +42,23 @@ services:
     networks:
       - forex-net
 
+  kafka-setup-kafkaDefault:
+    image: confluentinc/cp-kafka:7.6.0
+    container_name: forex-events-kafka-oauth-setup-kafkaDefault
+    depends_on:
+      kafkaDefault:
+        condition: service_healthy
+    volumes:
+      - ./scripts/create-topics.sh:/tmp/create-topics.sh
+    entrypoint: [ "bash", "/tmp/create-topics.sh", "exit", "0"]
+    networks:
+      - forex-net
+
   kafka-microsoft:
     profiles: [microsoft]
     image: confluentinc/cp-kafka:7.6.0
     container_name: kafka-microsoft
+    hostname: kafka-microsoft
     environment:
       KAFKA_BROKER_ID: 2
       KAFKA_ZOOKEEPER_CONNECT: forex-zookeeper:2181
@@ -77,7 +91,48 @@ services:
         condition: service_healthy
     volumes:
       - ./scripts/create-topics-microsoft.sh:/tmp/create-topics-microsoft.sh
-    entrypoint: [ "bash", "/tmp/create-topics-microsoft.sh" ]
+    entrypoint: [ "bash", "/tmp/create-topics-microsoft.sh", "microsoft", "forex-events-kafka-oauth-setup-microsoft", "9096"]
+    networks:
+      - forex-net
+
+  kafka-google:
+    profiles: [google]
+    image: confluentinc/cp-kafka:7.6.0
+    container_name: kafka-google
+    hostname: kafka-google
+    environment:
+      KAFKA_BROKER_ID: 2
+      KAFKA_ZOOKEEPER_CONNECT: forex-zookeeper:2181
+      KAFKA_LISTENERS: SASL_PLAINTEXT://0.0.0.0:9095
+      KAFKA_ADVERTISED_LISTENERS: SASL_PLAINTEXT://kafka-microsoft:9095
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: SASL_PLAINTEXT:SASL_PLAINTEXT
+      KAFKA_SASL_ENABLED_MECHANISMS: OAUTHBEARER
+      KAFKA_INTER_BROKER_LISTENER_NAME: SASL_PLAINTEXT
+      KAFKA_SASL_SERVER_CALLBACK_HANDLER_CLASS: org.apache.kafka.common.security.oauthbearer.internals.OAuthBearerValidatorCallbackHandler
+      KAFKA_OAUTHBEARER_TOKEN_ENDPOINT_URL: https://login.microsoftonline.com/${KAFKA_OAUTHBEARER_IMPL_TENANT_ID}/oauth2/v2.0/token
+      KAFKA_OAUTHBEARER_CLIENT_ID: ${KAFKA_OAUTHBEARER_IMPL_CLIENT_ID_GOOGLE}
+      KAFKA_OAUTHBEARER_CLIENT_SECRET: ${KAFKA_OAUTHBEARER_IMPL_CLIENT_SECRET_GOOGLE}
+      KAFKA_OAUTHBEARER_SCOPE: api://${KAFKA_OAUTHBEARER_IMPL_CLIENT_ID}/.default
+    healthcheck:
+      test: [ "CMD", "bash", "-c", "nc -z localhost 9095" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    ports:
+      - "9095:9095"
+    networks:
+      - forex-net
+
+  kafka-setup-google:
+    profiles: [google]
+    image: confluentinc/cp-kafka:7.6.0
+    container_name: forex-events-kafka-oauth-setup-google
+    depends_on:
+      kafka-microsoft:
+        condition: service_healthy
+    volumes:
+      - ./scripts/create-topics-microsoft.sh:/tmp/create-topics.sh
+    entrypoint: [ "bash", "/tmp/create-topics-microsoft.sh", "google", "forex-events-kafka-oauth-setup-google", "9095"]
     networks:
       - forex-net
 
@@ -96,14 +151,14 @@ services:
     ports:
       - "8085:8080"
     environment:
-      #- KAFKA_CLUSTERS_0_NAME=hydra-cluster
-      #- KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka-ordy-hydra:29093
-      #- KAFKA_CLUSTERS_1_NAME=google-cluster
-      #- KAFKA_CLUSTERS_1_BOOTSTRAPSERVERS=kafka-google:29094
-      #- KAFKA_CLUSTERS_2_NAME=github-cluster
-      #- KAFKA_CLUSTERS_2_BOOTSTRAPSERVERS=kafka-github:29095
-      - KAFKA_CLUSTERS_0_NAME=microsoft-cluster
-      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka-microsoft:29096
+      - KAFKA_CLUSTERS_0_NAME=kafkaDefault
+      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafkaDefault:29092
+      - KAFKA_CLUSTERS_1_NAME=microsoft-cluster
+      - KAFKA_CLUSTERS_1_BOOTSTRAPSERVERS=kafka-microsoft:29096
+      - KAFKA_CLUSTERS_2_NAME=google-cluster
+      - KAFKA_CLUSTERS_2_BOOTSTRAPSERVERS=kafka-google:29094
+      - KAFKA_CLUSTERS_3_NAME=github-cluster
+      - KAFKA_CLUSTERS_3_BOOTSTRAPSERVERS=kafka-github:29095
     networks:
       - forex-net
 
@@ -114,10 +169,10 @@ services:
     image: confluentinc/cp-kafka:7.6.0
     container_name: forex-events-kafka-oauth-setup
     depends_on:
-      kafka-default:
+      kafkaDefault:
         condition: service_healthy
-      kafka-microsoft:
-        condition: service_healthy
+      #kafka-microsoft:
+      #  condition: service_healthy
     volumes:
       - ./scripts/create-topics.sh:/tmp/create-topics.sh
     entrypoint: [ "bash", "/tmp/create-topics.sh" ]
