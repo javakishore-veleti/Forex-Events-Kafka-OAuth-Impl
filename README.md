@@ -13,7 +13,7 @@
 - Primary focus is to showcase Spring Boot + kafka + OAUTH Bearer for Kafka Procuers and Consumers
 - Also show case Kafka Listener(s) with different Kafka Bootstrap servers within the single Spring Boot application
 - Real-time **Forex trade event streaming** via **Apache Kafka**
-- **OAuth2/OIDC-secured Kafka clients** (Keycloak, Okta, Auth0, Azure)
+- **OAuth2/OIDC-secured Kafka clients** (Azure, Google, Github, Okta, Auth0 )
 - **Spring Boot 3 + JDK 17**
 - **OpenTelemetry + Prometheus + Grafana + Jaeger** observability
 - **Multi-broker**, **multi-provider** design with feature toggles
@@ -38,7 +38,7 @@
 
 ```text
 Forex-Events-Kafka-OAuth-Impl/
-├── src/main/java/com/jk/labs/kafka_oauth/
+├── src/main/java/com/kv/labs/kafka_oauth/
 │ ├── api/ForexTradeController.java
 │ ├── service/ForexTradePublisherService.java
 │ ├── oauth/InstrumentedOAuthBearerLoginCallbackHandler.java
@@ -72,23 +72,29 @@ Forex-Events-Kafka-OAuth-Impl/
 ### 1. Build
 
 ```bash
-git clone https://github.com/javakishore-veleti/Forex-Events-Kafka-OAuth-Impl.git
-cd Forex-Events-Kafka-OAuth-Impl
 mvn clean package -DskipTests
 
-docker-compose -f devops/docker-compose.local.yml up --build
+#docker-compose -f devops/docker-compose.local.yml up --build
+npm run infra:down
+npm run infra:up
 
 ```
 
 ```text
-This spins up:
+Above "npm run" command spins up:
 
-- Spring Boot app
 - Kafka brokers
 - Keycloak OAuth
 - Prometheus, Grafana, Jaeger
 
 ```
+
+```bash
+# Command to start the Spring Boot application
+java -jar target/forex-events-kafka-oauth-impl-*.jar
+
+```
+
 
 ## Publish Random Forex Trades
 
@@ -97,7 +103,7 @@ H2/Postgres).
 
 ```shell
 
-curl -X POST "http://localhost:8080/api/forex/publish"
+curl -X GET "http://localhost:8080/api/v1/fx-trade-events/publish"
 
 ```
 
@@ -107,29 +113,11 @@ In application.yml or Helm values. Only toggled-on providers connect to brokers 
 
 ```yaml
 features:
-  keycloak.enabled: true
+  kafkaDefault.enabled: true
+  keycloak.enabled: false
   okta.enabled: false
   auth0.enabled: true
   azure.enabled: true
-
-```
-
-## Deploy to Kubernetes
-
-Add the Helm repo:
-
-```shell
-
-helm repo add kishore-veleti https://javakishore-veleti.github.io/Forex-Events-Kafka-OAuth-Impl/
-helm repo update
-
-```
-
-Then install:
-
-```shell
-
-helm install forex-oauth kishore-veleti/kishore-veleti-forex-oauth-kafka -f devops/helm/kishore-veleti-forex-oauth-kafka/values-prod.yaml
 
 ```
 
@@ -199,40 +187,11 @@ forex_consume_latency_seconds_sum{provider="keycloak"} 1.23
 
 ```
 
-## Automated Releases
-
-Every successful deployment:
-
-- creates a semantic tag (v1.0.x)
-- updates Helm & Docker versions
-- publishes release notes on GitHub
-- auto-drafts changelog grouped by labels (feature, bug, infra, etc.)
-
-## Docker Images
-
-All images are published under:
-
-```shell
-docker.io/kishore-veleti-app:latest
-docker.io/kishore-veleti-keycloak:latest
-docker.io/kishore-veleti-kafka:latest
-```
-
 ## Goals
-
 - Reference implementation of OAuth-secured Kafka-
 - Demonstrate OTEL metrics for publish & consume paths
 - Show multi-broker Kafka + feature toggles
 - End-to-end CI/CD, rollback, and observability
 
-## Next Step
-
-Once you push this to your repo:
-
-1. GitHub will automatically render the badges
-2. Release Drafter and Labeler will start working
-3. CI/CD pipelines will build and tag images
-4. Helm chart can be accessed from:  
-   `https://javakishore-veleti.github.io/Forex-Events-Kafka-OAuth-Impl/`
 
 
